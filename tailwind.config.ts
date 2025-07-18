@@ -14,16 +14,16 @@ const config: Config = {
   				DEFAULT: '#1746A2',
   				light: '#7B55FF',
   				dark: '#3E00C2',
-          foreground: 'hsl(var(--primary-foreground))',
-          border: '#E5E8EB',
-          text: '#0E1426'
+				foreground: 'hsl(var(--primary-foreground))',
+				border: '#E5E8EB',
+				text: '#0E1426'
   			},
   			secondary: {
-  				DEFAULT: 'hsl(var(--secondary))',
+  				DEFAULT: '#ECF3FF',
   				light: '#FB923C',
   				dark: '#C2410C',
-          foreground: 'hsl(var(--secondary-foreground))',
-          text: '#3E4351'
+				foreground: 'hsl(var(--secondary-foreground))',
+				text: '#3E4351'
   			},
   			gray: {
   				'100': '#F5F5F5',
