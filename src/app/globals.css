@@ -90,3 +90,11 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* rounded-[14px] py-6 px-4 border border-[#D1DAEC] pr-12 */
+
+.react-select__control {
+  padding: 5px;
+  border-radius: 14px !important;
+  border: 1px solid #D1DAEC !important;
+}

@@ -20,7 +20,6 @@ export default function RootLayout({
       <body className={`${inter.className} lg:w-[1440px] lg:max-w-[1440px] lg:mx-auto w-screen`}>
         <div className="flex flex-col">
           {children}
-          <Footer />
         </div>
       </body>
     </html>

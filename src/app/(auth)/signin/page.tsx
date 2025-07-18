@@ -46,16 +46,16 @@ const SignIn = () => {
                                 </Label>
                                 <div className="relative">
                                     <Input
-                                    className="rounded-[14px] py-6 px-4 border border-[#D1DAEC] pr-12"
-                                    type={showPassword ? "text" : "password"}
-                                    placeholder="Enter password"
+                                        className="rounded-[14px] py-6 px-4 border border-[#D1DAEC] pr-12"
+                                        type={showPassword ? "text" : "password"}
+                                        placeholder="Enter password"
                                     />
                                     <button
-                                    type="button"
-                                    className="absolute top-1/2 right-4 -translate-y-1/2 text-gray-500"
-                                    onClick={() => setShowPassword((prev: boolean) => !prev)}
+                                        type="button"
+                                        className="absolute top-1/2 right-4 -translate-y-1/2 text-gray-500"
+                                        onClick={() => setShowPassword((prev: boolean) => !prev)}
                                     >
-                                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                                     </button>
                                 </div>
                                 <Link href='' className="font-normal text-sm text-[#878A93] cursor-pointer">
