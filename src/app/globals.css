@@ -91,10 +91,25 @@
   }
 }
 
-/* rounded-[14px] py-6 px-4 border border-[#D1DAEC] pr-12 */
+/* Hide scrollbar for Chrome, Safari and Opera */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}
 
 .react-select__control {
   padding: 5px;
   border-radius: 14px !important;
   border: 1px solid #D1DAEC !important;
+}
+
+.focus-visible\:ring-ring:focus-visible { 
+  outline: none;
 }
