@@ -10,10 +10,10 @@ export default function CircularProgress({ percentage }: { percentage: number })
     const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
     const getColor = () => {
-        if (percentage < 40) return '#EF4444'; // Red
-        if (percentage < 60) return '#F97316'; // Orange
-        if (percentage < 80) return '#FACC15'; // Yellow
-        return '#22C55E'; // Green
+        if (percentage < 40) return '#EF4444';
+        if (percentage < 60) return '#F97316';
+        if (percentage < 80) return '#FACC15';
+        return '#22C55E';
     };
 
     return (

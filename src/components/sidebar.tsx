@@ -36,7 +36,7 @@ const SideBar = ({ onLinkClick }: { onLinkClick?: () => void }) => {
                         <CircularProgress percentage={70} />
                         <span className="text-[#0A1B39] font-bold text-sm text-center">Complete your profile</span>
                         <span className="text-[#83899F] text-sm font-normal text-center">Awaiting profile verification feedback </span>
-                        <span className="border border-[#E6E7EC] cursor-pointer text-sm text-[#1A1A1A] font-medium px-4 py-[8px] rounded-[12px]">My Profile</span>
+                        <Link href={'/profile'} className="border border-[#E6E7EC] text-center cursor-pointer text-sm text-[#1A1A1A] font-medium px-4 py-[8px] rounded-[12px]">My Profile</Link>
                     </div>
                     <div className="flex w-full cursor-pointer justify-between bg-[#F5F6F8] items-center rounded-2xl px-4 py-3">
                         <div className="bg-white w-12 h-12 rounded-full">
