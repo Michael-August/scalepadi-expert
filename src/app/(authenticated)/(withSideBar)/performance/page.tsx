@@ -33,7 +33,7 @@ const performance = () => {
                                     <Star className="w-[13.33px] h-[13.33px] text-[#F2BB05] fill-[#F6CF50]" />
                                     <Star className="w-[13.33px] h-[13.33px] text-[#CFD0D4] fill-[#E7ECEE]" />
                                 </div>
-                                <span className="text-[#878A93] text-sm font-normal">Client's Reviews</span>
+                                <span className="text-[#878A93] text-sm font-normal">Client&rsquo;s Reviews</span>
                             </div>
                         </div>
                         <div className="flex flex-col gap-3">
