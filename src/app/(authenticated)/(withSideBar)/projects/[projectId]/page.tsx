@@ -152,7 +152,7 @@ const ProjectDetails = () => {
                     <div className="w-full border border-[#F2F2F2] rounded-2xl p-6 flex flex-col gap-6">
                         <div className="flex flex-col gap-2 pb-5 border-b border-[#F2F2F2]">
                             <span className="text-[#1A1A1A] text-sm font-normal">Tasks & Deliverables</span>
-                            <span className="text-[#727374] text-sm font-normal">Here’s your personalized task plan for this project. Complete each deliverable, upload your work, and mark it done when ready.</span>
+                            <span className="text-[#727374] text-sm font-normal">Here’s your personalized task plan for this project.Complete each deliverable, upload your work, and mark it done when ready.</span>
                             <span className="text-sm text-[#3E4351] font-semibold">All tasks must be submitted before the final delivery is approved.</span>
                         </div>
                     
