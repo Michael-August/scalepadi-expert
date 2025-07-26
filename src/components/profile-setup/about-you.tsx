@@ -1,4 +1,4 @@
-import { useFormContext } from "react-hook-form";
+import { Controller, useFormContext } from "react-hook-form";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Label } from "../ui/label";
@@ -11,6 +11,7 @@ const AboutYou = ({ onNext }: { onNext: () => void }) => {
     const {
         register,
         handleSubmit,
+        control,
         formState: { errors },
     } = useFormContext();
     
@@ -47,19 +48,32 @@ const AboutYou = ({ onNext }: { onNext: () => void }) => {
                         </div>
 
                         <div className="form-group flex flex-col gap-1">
-                            <Label>Gender <span className="text-red-600">*</span></Label>
-                            <Select {...register('gender', {required: 'Gender is required'})}>
-                                <SelectTrigger className="w-full rounded-[14px] py-6 px-4 border border-[#D1DAEC]">
-                                    <SelectValue placeholder="Select Gender" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectGroup>
-                                        <SelectItem value="male">Male</SelectItem>
-                                        <SelectItem value="female">Female</SelectItem>
-                                    </SelectGroup>
-                                </SelectContent>
-                            </Select>
-                            {errors.gender?.message && <p className="text-red-500 text-sm">{errors?.gender?.message as string}</p>}
+                            <Label>
+                                Gender <span className="text-red-600">*</span>
+                            </Label>
+
+                            <Controller
+                                name="gender"
+                                control={control}
+                                rules={{ required: "Gender is required" }}
+                                render={({ field }) => (
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                        <SelectTrigger className="w-full rounded-[14px] py-6 px-4 border border-[#D1DAEC]">
+                                        <SelectValue placeholder="Select Gender" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                        <SelectGroup>
+                                            <SelectItem value="male">Male</SelectItem>
+                                            <SelectItem value="female">Female</SelectItem>
+                                        </SelectGroup>
+                                        </SelectContent>
+                                    </Select>
+                                )}
+                            />
+
+                            {errors.gender?.message && (
+                                <p className="text-red-500 text-sm">{errors.gender.message as string}</p>
+                            )}
                         </div>
 
                         {/* <div className="form-group w-full flex flex-col gap-1">
@@ -87,7 +101,7 @@ const AboutYou = ({ onNext }: { onNext: () => void }) => {
                         <div className="flex flex-col gap-1">
                             <label className="block text-sm">State of Residence</label>
                             <Input
-                                {...register('email', { required: 'State is required' })}
+                                {...register('state', { required: 'State is required' })}
                                 className="rounded-[14px] py-6 px-4 border border-[#D1DAEC] pr-12"
                                 placeholder="Enter State"
                                 type="text"
