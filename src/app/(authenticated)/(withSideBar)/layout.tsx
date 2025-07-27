@@ -40,9 +40,9 @@ export default function RootLayout({
                     {/* Main content wrapper */}
                     <div className="flex flex-col w-full flex-1 lg:ml-[17.25rem]">
                         {/* Navbar */}
-                        <div className="flex items-center gap-3 justify-between bg-white fixed top-0 lg:left-[17.25rem] right-0 z-20">
+                        <div className="flex items-center w-full gap-3 justify-between bg-white fixed top-0 lg:left-[17.25rem] right-0 z-20">
                             {/* Mobile: Hamburger icon */}
-                            <button className="lg:hidden cursor-pointer" onClick={() => setIsSidebarOpen(true)}>
+                            <button className="lg:hidden cursor-pointer px-4" onClick={() => setIsSidebarOpen(true)}>
                                 <Menu className="text-gray-700" />
                             </button>
                             <DashboardNav withLogo={false} />
