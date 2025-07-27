@@ -5,7 +5,7 @@ import { Send, Search } from "lucide-react";
 import Image from "next/image";
 
 const experts = [
-  { name: "David Eze", role: "Admin", avatar: "/avatar1.png" },
+  { name: "David Eze", role: "Admin", avatar: "/images/profile-pic.svg" },
   { name: "Company name", role: "Thank you for the job...", avatar: "/avatar2.png" },
   { name: "Salman Khan Bhai", role: "Product Designer", avatar: "/avatar3.png" },
   { name: "Jenifer Ola Obi", role: "Business Expert", avatar: "/avatar4.png" },
@@ -80,7 +80,7 @@ export default function MessagesPage() {
                 </div>
                 <div className="border-t p-4 flex items-center gap-2">
                     <div className="flex items-center gap-2 border rounded p-2 flex-1">
-                        <Image src="/scalepadi-logo.png" alt="Ai" width={20} height={20} />
+                        <Image src="/scalepadi-ai-logo.svg" alt="AI" width={20} height={20} />
                         <input
                             value={input}
                             onChange={(e) => setInput(e.target.value)}

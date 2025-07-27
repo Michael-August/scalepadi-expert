@@ -30,7 +30,6 @@ const DashboardNav = ({ withLogo = true }: { withLogo?: boolean }) => {
                             </div>
                     </SheetContent>
                 </Sheet>
-
                 <div className="w-[38px] h-[38px] rounded-full bg-[#FCCE37]"></div>
             </div>
         </nav>
