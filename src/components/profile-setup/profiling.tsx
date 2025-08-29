@@ -4,8 +4,9 @@ import { Textarea } from "../ui/textarea";
 import { Upload } from "lucide-react";
 import { Input } from "../ui/input";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { Button } from "../ui/button";
 
-const Profiling = ({ onBack, onSubmit }: { onBack: () => void; onSubmit: (data: any) => void }) => {
+const Profiling = ({ onBack, onSubmit, isAdding }: { onBack: (data: any) => void; onSubmit: (data: any) => void, isAdding: boolean }) => {
 
     const {
         register,
@@ -63,6 +64,10 @@ const Profiling = ({ onBack, onSubmit }: { onBack: () => void; onSubmit: (data: 
                             {errors.identification?.message && <p className="text-red-500 text-sm">{errors?.identification?.message as string}</p>}
                         </div>
                     </div>
+
+                    <Button disabled={isAdding} type="submit" className="bg-primary rounded-[14px] w-fit text-white py-2 px-4">
+                        {isAdding ? 'Submitting...' : 'Next'}
+                    </Button>
                 </form>
             </div>
         </div>

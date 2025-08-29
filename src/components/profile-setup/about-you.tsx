@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectVa
 import PhoneInput from "react-phone-input-2";
 import 'react-phone-input-2/lib/style.css';
 
-const AboutYou = ({ onNext }: { onNext: () => void }) => {
+const AboutYou = ({ onNext, user, isAdding }: { onNext: (data: any) => void; user: any; isAdding: boolean }) => {
 
     const {
         register,
@@ -18,7 +18,7 @@ const AboutYou = ({ onNext }: { onNext: () => void }) => {
     return (
         <div className="w-full flex flex-col gap-6">
             <div className="top flex flex-col gap-2">
-                <span className="text-[#0E1426] font-bold text-[32px]">Hi David🤚, tell us about yourself</span>
+                <span className="text-[#0E1426] font-bold text-[32px]">Hi { user?.name?.split(' ')[0] }🤚, tell us about yourself</span>
                 <span className="text-[#1A1A1A] font-normal text-base">Your profile set up will only take few minutes</span>
             </div>
 
@@ -29,11 +29,11 @@ const AboutYou = ({ onNext }: { onNext: () => void }) => {
                         <div className="flex flex-col gap-1">
                             <label className="block text-sm">Full Name</label>
                             <Input
-                                {...register('fullName', { required: 'Full name is required' })}
+                                {...register('name', { required: 'Full name is required' })}
                                 className="rounded-[14px] py-6 px-4 border border-[#D1DAEC] pr-12"
                                 placeholder="Enter Fullname"
                             />
-                            {errors.fullName?.message && <p className="text-red-500 text-sm">{errors?.fullName?.message as string}</p>}
+                            {errors.name?.message && <p className="text-red-500 text-sm">{errors?.name?.message as string}</p>}
                         </div>
 
                         <div className="flex flex-col gap-1">
@@ -76,16 +76,26 @@ const AboutYou = ({ onNext }: { onNext: () => void }) => {
                             )}
                         </div>
 
-                        {/* <div className="form-group w-full flex flex-col gap-1">
+                        <div className="form-group w-full flex flex-col gap-1">
                             <Label>Phone Number <span className="text-red-600">*</span></Label>
-                            <PhoneInput
-                                country={'ng'}
-                                value={''}
-                                {...register('phone', {required: 'Phone number is required'})}
-                                inputClass="!rounded-[14px] !py-6 !w-full !border !border-[#D1DAEC]"
-                                containerClass="!w-full !rounded-tl-[14px] !rounded-bl-[14px]"
+                            <Controller
+                                name="phone"
+                                control={control}
+                                rules={{ required: 'Phone number is required' }}
+                                render={({ field }) => (
+                                    <PhoneInput
+                                        country={'ng'}
+                                        value={field.value}
+                                        onChange={field.onChange}
+                                        inputClass="!rounded-[14px] !py-6 !w-full !border !border-[#D1DAEC]"
+                                        containerClass="!w-full !rounded-tl-[14px] !rounded-bl-[14px]"
+                                    />
+                                )}
                             />
-                        </div> */}
+                            {errors.phone?.message && (
+                                <p className="text-red-500 text-sm">{errors.phone.message as string}</p>
+                            )}
+                        </div>
 
                         <div className="flex flex-col gap-1">
                             <label className="block text-sm">Country of Residence</label>
@@ -110,8 +120,8 @@ const AboutYou = ({ onNext }: { onNext: () => void }) => {
                         </div>
                     </div>
 
-                    <Button type="submit" className="bg-primary rounded-[14px] w-fit text-white py-2 px-4">
-                        Next
+                    <Button disabled={isAdding} type="submit" className="bg-primary rounded-[14px] w-fit text-white py-2 px-4">
+                        {isAdding ? 'Submitting...' : 'Next'}
                     </Button>
                 </form>
             </div>

@@ -6,7 +6,7 @@ import { Input } from "../ui/input";
 import MultiSelectField from "../multiselectfield";
 import { Upload } from "lucide-react";
 
-const ProfessionalExperience = ({ onNext, onBack }: { onNext: () => void; onBack: () => void }) => {
+const ProfessionalExperience = ({ onNext, onBack, isAdding }: { onNext: (data: any) => void; onBack: () => void, isAdding: boolean }) => {
 
     const {
         register,
@@ -26,7 +26,7 @@ const ProfessionalExperience = ({ onNext, onBack }: { onNext: () => void; onBack
                     <div className="flex flex-col gap-4">
                         <div className="form-group flex flex-col gap-1">
                             <Label>Joining Capacity <span className="text-red-600">*</span></Label>
-                            <Select {...register('capacity', {required: 'Capacity is required'})}>
+                            <Select {...register('category', {required: 'Capacity is required'})}>
                                 <SelectTrigger className="w-full rounded-[14px] py-6 px-4 border border-[#D1DAEC]">
                                     <SelectValue placeholder="Select Capacity" />
                                 </SelectTrigger>
@@ -37,12 +37,12 @@ const ProfessionalExperience = ({ onNext, onBack }: { onNext: () => void; onBack
                                     </SelectGroup>
                                 </SelectContent>
                             </Select>
-                            {errors.capacity?.message && <p className="text-red-500 text-sm">{errors?.capacity?.message as string}</p>}
+                            {errors.category?.message && <p className="text-red-500 text-sm">{errors?.category?.message as string}</p>}
                         </div>
 
                         <MultiSelectField label="Role" name="role" options={[]} />
 
-                        <MultiSelectField label="Preferred Industries" name="industry" options={[]} />
+                        <MultiSelectField label="Preferred Industries" name="preferredIndustry" options={[]} />
 
                         <MultiSelectField label="Skills" name="skills" options={[]} />
 
@@ -107,8 +107,8 @@ const ProfessionalExperience = ({ onNext, onBack }: { onNext: () => void; onBack
                         </div>
                     </div>
 
-                    <Button type="submit" className="bg-primary rounded-[14px] w-fit text-white py-2 px-4">
-                        Next
+                   <Button disabled={isAdding} type="submit" className="bg-primary rounded-[14px] w-fit text-white py-2 px-4">
+                        {isAdding ? 'Submitting...' : 'Next'}
                     </Button>
                 </form>
             </div>
