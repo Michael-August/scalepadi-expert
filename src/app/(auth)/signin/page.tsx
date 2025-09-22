@@ -55,7 +55,6 @@ const SignIn = () => {
             },
             onError: (error) => {
                 toast.error(error.message || "An error occurred during login");
-                console.error("Login error:", error);
             }
         });
     }

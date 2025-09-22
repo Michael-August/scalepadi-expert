@@ -1,14 +1,31 @@
+"use client";
+
 import { Routes } from "@/lib/routes"
 import { ChevronRight, Folder, FolderOpen, LogOutIcon } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import CircularProgress from "./circular-progress"
+import { useGetExpertByToken, useLogout } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 const SideBar = ({ onLinkClick }: { onLinkClick?: () => void }) => {
 
     const pathname = usePathname();
-    
+
+    const { logout, isPending } = useLogout()
+    const { expert } = useGetExpertByToken()
+
+    const handleLogOut = () => {
+        logout(undefined, {
+            onSuccess: () => {
+                toast.success("Logout successful")
+                localStorage.clear()
+                window.location.href = 'signin'
+            }
+        })
+    }
+
     return (
         <div className="bg-[#ffffff] w-full border-r border-[#EDEEF3] px-[18px] py-[30px] flex flex-col gap-14">
             <Image src={'/logo.svg'} alt="Logo" width={137.7} height={28} />
@@ -33,7 +50,7 @@ const SideBar = ({ onLinkClick }: { onLinkClick?: () => void }) => {
 
                 <div className="flex w-full flex-col gap-3">
                     <div className="progress mb-4 flex flex-col w-full items-center gap-3 justify-center">
-                        <CircularProgress percentage={70} />
+                        <CircularProgress percentage={expert?.data?.regPercentage} />
                         <span className="text-[#0A1B39] font-bold text-sm text-center">Complete your profile</span>
                         <span className="text-[#83899F] text-sm font-normal text-center">Awaiting profile verification feedback </span>
                         <Link href={'/profile'} className="border border-[#E6E7EC] text-center cursor-pointer text-sm text-[#1A1A1A] font-medium px-4 py-[8px] rounded-[12px]">My Profile</Link>
@@ -50,9 +67,10 @@ const SideBar = ({ onLinkClick }: { onLinkClick?: () => void }) => {
                     </div>
                     <div
                         className={`cursor-pointer rounded-xl w-full items-center px-4 py-3 flex text-[#E33161] gap-[10px] font-medium text-sm`}
+                        onClick={handleLogOut}
                     >
                         <LogOutIcon className="w-5 h-5" />
-                        <span>Log out</span>
+                        <span>{isPending ? 'Logging out...' : 'Log out'}</span>
                     </div>
                 </div>
             </div>

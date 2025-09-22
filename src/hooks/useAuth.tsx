@@ -1,5 +1,5 @@
 import { axiosClient } from "@/lib/api/axiosclient";
-import { useMutation, useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { AxiosError } from "axios";
 import { toast } from "sonner";
 
@@ -31,7 +31,15 @@ export const useLogin = () => {
                 }
                 return res.data;
             } catch (error: any) { 
-                throw new Error(error) || new Error("An error occurred during login");
+                if (error instanceof AxiosError) {
+                    toast.error(error.response?.data?.message || `Failed to log in`)
+                } else if (error instanceof Error) {
+                    toast.error(error.message)
+                } else {
+                    toast.error(`An unexpected error occured while trying to log in`)
+                }
+
+                throw error;
             }
         }
     })
@@ -163,6 +171,7 @@ export const useGetExpertByToken = () => {
 }
 
 export const useCompleteProfileSetUp = () => {
+    const queryClient = useQueryClient()
     const { mutate: completeProfileSetup, isPending } = useMutation({
         mutationFn: async (data: any) => {
             try {
@@ -181,6 +190,10 @@ export const useCompleteProfileSetUp = () => {
                 throw new Error(backendMessage);
             }
         },
+        onSuccess: () => {
+            toast.success("Profile updated successfully");
+            queryClient.invalidateQueries({ queryKey: ["profile"] });
+        }
     })
 
     return { completeProfileSetup, isPending };

@@ -8,10 +8,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Users2, Clock, Church, Download, File, Plus, Link, X } from "lucide-react";
 import { useState } from "react";
 import Image from "next/image";
+import { useParams } from "next/navigation";
+import { useGetProject } from "@/hooks/useProject";
+import moment from "moment";
 
 const ProjectDetails = () => {
 
     const [activeTab, setActiveTab] = useState<'projectOverview' | 'taskTracker'>('projectOverview')
+
+    const { projectId } = useParams()
+    
+    const { project, isLoading } = useGetProject(projectId as string)
 
     const [openTaskDeliverablesForm, setOpenTaskDeliverablesForm] = useState(false)
     const [openTaskSuccessModal, setOpenTaskSuccessModal] = useState(false)
@@ -46,32 +53,34 @@ const ProjectDetails = () => {
                     <span className="text-[#CFD0D4] text-sm">/</span>
                 </div>
 
-                <div className="top w-full flex items-center gap-3">
-                    <div className="bg-[#D1F7FF] flex items-center justify-center p-[5.84px] text-[#1A1A1A] text-xs h-[54px] rounded-[11.68px]">BlueMart</div>
-                    <div className="flex flex-col gap-2">
-                        <span className="text-sm text-[#878A93] ">Growth Audit for GreenMart </span>
-                        <div className="items-center gap-2 flex">
-                            <span className="flex items-center gap-[2px] text-sm text-[#878A93]">
-                                <Users2 className="w-4 h-4" />
-                                Members: <span className="text-[#121217]">03</span>
-                            </span>
-                            <span className="flex items-center gap-[2px] text-sm text-[#878A93]">
-                                <Clock className="w-4 h-4" />
-                                Due: <span className="text-[#121217]">June 30</span>
-                            </span>
+                 <div className="flex w-full items-center justify-between">
+                    <div className="top w-full flex items-center gap-3">
+                        <div className="bg-[#D1F7FF] flex items-center justify-center p-[5.84px] text-[#1A1A1A] text-xs h-[54px] rounded-[11.68px]">BlueMart</div>
+                        <div className="flex flex-col gap-2">
+                            <span className="text-sm text-[#878A93] ">{ project?.data?.title }</span>
+                            <div className="items-center gap-2 flex">
+                                <span className="flex items-center gap-[2px] text-sm text-[#878A93]">
+                                    <Users2 className="w-4 h-4" />
+                                    Members: <span className="text-[#121217]">{project?.data?.experts?.length}</span>
+                                </span>
+                                <span className="flex items-center gap-[2px] text-sm text-[#878A93]">
+                                    <Clock className="w-4 h-4" />
+                                    Due: <span className="text-[#121217]">{ moment(project?.data?.dueDate).format("MMMM DD") }</span>
+                                </span>
+                            </div>
                         </div>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                        <span className="text-sm text-[#878A93] opacity-0">Hi</span>
-                        <div className="items-center gap-1 flex">
-                            <span className="flex items-center gap-[2px] text-sm text-[#878A93]">
-                                <Church className="w-4 h-4" />
-                                Status: <span className="text-[#121217]">In progress</span>
-                            </span>
-                            <span className="flex items-center gap-[2px] text-sm text-[#878A93]">
-                                <Church className="w-4 h-4" />
-                                Role: <span className="text-[#121217]">In progress</span>
-                            </span>
+                        <div className="flex flex-col gap-1">
+                            <span className="text-sm text-[#878A93] opacity-0">Hi</span>
+                            <div className="items-center gap-1 flex">
+                                <span className="flex items-center gap-[2px] text-sm text-[#878A93]">
+                                    <Church className="w-4 h-4" />
+                                    Status: <span className="text-[#121217]">{project?.data?.status}</span>
+                                </span>
+                                {/* <span className="flex items-center gap-[2px] text-sm text-[#878A93]">
+                                    <Church className="w-4 h-4" />
+                                    Role: <span className="text-[#121217]">In progress</span>
+                                </span> */}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -104,15 +113,12 @@ const ProjectDetails = () => {
                             dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(yourContent) }}
                         /> */}
                         <span className="text-sm text-[#727374]">
-                            Theming allows users to leverage the power of the dotLottie format by adding multiple themes into a single file. This enables you can easily embed one animation file into your design project and switch between themes without the need to create multiple files.
-                        </span>
-                        <span className="text-sm text-[#727374]">
-                            Theming allows users to leverage the power of the dotLottie format by adding multiple themes into a single file. This enables you can easily embed one animation file into your design project and switch between themes without the need to create multiple files.
+                            {project?.data?.brief}
                         </span>
                     </div>
                     <div className="flex flex-col gap-2">
                         <span className="text-[#1A1A1A] text-sm font-normal">Goal</span>
-                        <span className="text-sm text-[#727374]">Increase weekly customer sign-ups by 30% in 6 weeks through acquisition funnel optimization and sales outreach.</span>
+                        <span className="text-sm text-[#727374]">{ project?.data?.goal }</span>
                     </div>
                     <div className="flex flex-col gap-2">
                         <span className="text-[#1A1A1A] text-sm font-normal">Challenge</span>
@@ -129,13 +135,25 @@ const ProjectDetails = () => {
                     </div>
                     <div className="flex flex-col gap-2">
                         <span className="text-[#1A1A1A] text-sm font-normal">Resources</span>
-                        <div className="flex items-center gap-[10px]">
-                            <div className="flex items-center gap-2 p-1 bg-[#F7F9F9] rounded-3xl">
+                        {project?.data?.resources?.map((resource: string, index: number) => (
+                            <div key={index} className="flex items-center gap-[10px]">
+                                <div className="flex items-center gap-2 p-1 bg-[#F7F9F9] rounded-3xl">
                                 <File className="w-4 h-4 text-primary" />
-                                <span className="text-[#878A93] text-xs">CRM Snapshot ()CSV</span>
-                                <Download className="w-4 h-4 text-[#878A93] cursor-pointer" />
+                                <span className="text-[#878A93] text-[8px] truncate max-w-[120px]">
+                                    {resource.split("/").pop()} {/* show only file name */}
+                                </span>
+                                <a
+                                    href={resource}
+                                    download
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    <Download className="w-4 h-4 text-[#878A93] cursor-pointer" />
+                                </a>
+                                </div>
                             </div>
-                        </div>
+                        ))}
+                        
                     </div>
                     <div className="flex flex-col gap-2">
                         <span className="text-[#1A1A1A] text-sm font-normal">Deliverables</span>
