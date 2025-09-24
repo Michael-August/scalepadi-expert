@@ -1,12 +1,13 @@
 "use client"
 
 import { Button } from "@/components/ui/button";
-import { useAcceptDeclineMatch, useGetProjects } from "@/hooks/useProject";
+import { useAcceptDeclineHire, useAcceptDeclineMatch, useGetBusinessHire, useGetProjects } from "@/hooks/useProject";
 import { Calendar, Clock, Users2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useRouter } from "next/navigation";
+import moment from "moment";
 
 const Opportunities = () => {
 
@@ -14,10 +15,12 @@ const Opportunities = () => {
     const [showDeclineModal, setShowDeclineModal] = useState(false);
     const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
     
-    const [params, setParams] = useState({ status: activeTab === 'admin' ? 'in-progress' : 'completed' })
+    const [params, setParams] = useState({ status: 'pending' })
 
     const { projects, isLoading } = useGetProjects(params)
+    const { hires, isLoading: isLoadingHires } = useGetBusinessHire()
     const { acceptOrDecline, isPending } = useAcceptDeclineMatch()
+    const { acceptOrDeclineHire, isPending: isPendingHire } = useAcceptDeclineHire()
     const router = useRouter()
 
     const handleAcceptDecline = (action: 'accepted' | 'declined', projectId: string) => {
@@ -35,6 +38,25 @@ const Opportunities = () => {
             },
             onError: () => {
                 toast.error(`Error ${action === 'accepted' ? 'accepting' : 'declining'} project`)
+            }
+        });
+    }
+
+    const handleAcceptDeclineHire = (action: 'Accepted' | 'Declined', hireId: string) => {
+        if (!hireId) {
+            return;
+        }
+        acceptOrDeclineHire({ expertStatus: action, hireId}, {
+            onSuccess: () => {
+                toast.success(`Hire ${action} successfully`)
+                if(action === 'Declined') {
+                    router.push('/opportunities')
+                    return
+                }
+                router.push(`/opportunities/`)
+            },
+            onError: () => {
+                toast.error(`Error ${action === 'Accepted' ? 'accepting' : 'declining'} hire`)
             }
         });
     }
@@ -58,7 +80,7 @@ const Opportunities = () => {
     };
 
     useEffect(() => {
-        setParams({status: activeTab === 'admin' ? 'in-progress' : 'completed'})
+        setParams({status: activeTab === 'admin' ? 'pending' : 'completed'})
     }, [activeTab])
 
     return (
@@ -110,11 +132,11 @@ const Opportunities = () => {
                                                 <div className="items-center gap-2 flex">
                                                     <span className="flex items-center gap-[2px] text-sm text-[#878A93]">
                                                         <Users2 className="w-4 h-4" />
-                                                        Members: <span className="text-[#121217]">{project?.members?.length || '0'}</span>
+                                                        Members: <span className="text-[#121217]">{project?.experts?.length || '0'}</span>
                                                     </span>
                                                     <span className="flex items-center gap-[2px] text-sm text-[#878A93]">
                                                         <Clock className="w-4 h-4" />
-                                                        Due: <span className="text-[#121217]">{project?.duration || 'N/A'}</span>
+                                                        Due: <span className="text-[#121217]">{moment(project?.dueDate).format("DD MMM, YYYY") || 'N/A'}</span>
                                                     </span>
                                                 </div>
                                             </div>
@@ -136,15 +158,16 @@ const Opportunities = () => {
                                             </div>
                                             <div className="flex flex-col gap-2">
                                                 <span className="text-[#1A1A1A] text-sm">Project brief</span>
-                                                <span className="text-[#727374] text-sm">{project?.description || 'N/A'}</span>
+                                                <span className="text-[#727374] text-sm">{project?.brief || 'N/A'}</span>
                                             </div>
                                             <div className="flex flex-col gap-2">
-                                                <span className="text-[#1A1A1A] text-sm">Required Skills</span>
-                                                <div className="flex items-center gap-2 flex-wrap">
+                                                <span className="text-[#1A1A1A] text-sm">Goal</span>
+                                                <span className="text-[#727374] text-sm">{project?.goal || 'N/A'}</span>
+                                                {/* <div className="flex items-center gap-2 flex-wrap">
                                                     {project?.skills?.map((skill: string, idx: number) => 
                                                         <span key={idx} className="bg-[#F2F7FF] p-2 rounded-[14px] text-xs text-[#1E88E5]">{skill}</span>
                                                     )}
-                                                </div>
+                                                </div> */}
                                             </div>
                                         </div>
 
@@ -164,7 +187,44 @@ const Opportunities = () => {
                     }
                     {activeTab === 'business' && 
                         <div className="rounded-3xl gap-3 w-full border border-[#D1DAEC80] hide-scrollbar p-3 h-[862px] overflow-y-scroll">
-                            
+                            <div className="h-full flex flex-col gap-4 w-full bg-[#FBFCFC] rounded-3xl p-3 hide-scrollbar overflow-y-scroll">
+                                {hires?.data?.data?.length === 0 && !isLoadingHires && <div className="flex flex-col gap-2 items-center justify-center h-full">
+                                    <span className="text-sm text-[#878A93]">No opportunities available at the moment</span>
+                                </div>}
+
+                                {isLoadingHires && <div className="flex flex-col gap-2 items-center justify-center h-full">
+                                    <span className="text-sm text-[#878A93]">Loading opportunities...</span>
+                                </div>}
+
+                                {hires?.data?.data?.map((hire: any) => (
+                                    <div key={hire?.id} className="flex flex-col gap-4 rounded-[14px] bg-white border border-[#D1DAEC] p-4">
+                                        <div className="flex flex-col gap-2">
+                                            <span className="text-[#1A1A1A] text-sm">Project brief</span>
+                                            <span className="text-[#727374] text-sm">{hire?.description || 'N/A'}</span>
+                                        </div>
+                                        <div className="flex flex-col gap-2">
+                                            <span className="text-[#1A1A1A] text-sm">Budget</span>
+                                            <span className="text-[#727374] text-sm">{hire?.budget.toLocaleString() || 'N/A'}</span>
+                                        </div>
+                                        <div className="flex flex-col gap-2">
+                                            <span className="text-[#1A1A1A] text-sm">Duration</span>
+                                            <span className="text-[#727374] text-sm">{hire?.duration|| 'N/A'}</span>
+                                        </div>
+
+                                        {hire?.expertStatus === "awaiting-response" && <div className="flex gap-4">
+                                            <Button disabled={isPendingHire} onClick={() => handleAcceptDeclineHire("Accepted", hire.id)} className="bg-primary text-white w-fit text-xs rounded-[14px]">{isPendingHire ? 'Accepting...' : 'Accept'}</Button>
+                                            <Button disabled={isPendingHire}
+                                                variant={'destructive'}
+                                                onClick={() => handleAcceptDeclineHire("Declined", hire.id)} className="w-fit text-xs rounded-[14px]"
+                                            >
+                                                {isPendingHire ? 'Declining...' : 'Decline'}
+                                            </Button>
+                                        </div>}
+                                        {hire?.expertStatus === "Accepted" && <span className="text-sm text-green-600 font-medium">You have accepted this hire.</span>}
+                                        {hire?.expertStatus === "Declined" && <span className="text-sm text-red-600 font-medium">You have declined this hire.</span>}
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     }
                 </div>

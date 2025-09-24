@@ -51,41 +51,62 @@ const ProjectInvitePage = () => {
     return (
         <div className="flex flex-col gap-10 pb-20">
             <div className="flex w-full px-14 py-4 flex-col gap-6">
-                <div className="page-heading flex flex-col gap-2">
-                    <span className="text-[#1A1A1A] font-bold text-2xl">Project Invitation</span>
-                    <span className="text-[#1A1A1A] font-normal text-base">You have been invited to join this project. Please review the details and accept or decline the invitation.</span>
-                </div>
-                <div className="rounded-3xl border border-[#D1DAEC80] p-6 flex flex-col gap-6">
-                    <div className="flex flex-col gap-4">
-                        <span className="font-semibold text-xl text-black">Project Title</span>
-                        <span className="text-base text-[#878A93]">This is a brief description of the project, outlining its main objectives and requirements.</span>
+                <div className="flex flex-col gap-4">
+                    <span className="font-semibold text-xl text-black">Project Title</span>
+                    <span className="text-base text-[#878A93]">{project?.data?.brief}</span>
+                    <span className="text-base text-[#878A93]">Goal: {project?.data?.goal}</span>
                     </div>
+
                     <div className="flex flex-col gap-4">
-                        <span className="font-semibold text-xl text-black">Project Details</span>
-                        <div className="flex flex-col gap-2">
-                            <div className="flex gap-2">
-                                <span className="font-medium text-sm text-[#878A93] w-32">Client Name:</span>
-                                <span className="text-sm text-black">John Doe</span>
-                            </div>
-                            <div className="flex gap-2">
-                                <span className="font-medium text-sm text-[#878A93] w-32">Start Date:</span>
-                                <span className="text-sm text-black">January 15, 2024</span>
-                            </div>
-                            <div className="flex gap-2">
-                                <span className="font-medium text-sm text-[#878A93] w-32">End Date:</span>
-                                <span className="text-sm text-black">March 15, 2024</span>
-                            </div>
-                            <div className="flex gap-2">
-                                <span className="font-medium text-sm text-[#878A93] w-32">Budget:</span>
-                                <span className="text-sm text-black">₦5,000</span>
-                            </div>
-                            <div className="flex gap-2">
-                                <span className="font-medium text-sm text-[#878A93] w-32">Location:</span>
-                                <span className="text-sm text-black">Remote</span>
-                            </div>
+                    <span className="font-semibold text-xl text-black">Project Details</span>
+                    <div className="flex flex-col gap-2">
+                        <div className="flex gap-2">
+                        <span className="font-medium text-sm text-[#878A93] w-32">Client Name:</span>
+                        <span className="text-sm text-black">{project?.data?.businessId?.name}</span>
+                        </div>
+                        <div className="flex gap-2">
+                        <span className="font-medium text-sm text-[#878A93] w-32">Company:</span>
+                        <span className="text-sm text-black">{project?.data?.businessId?.title}</span>
+                        </div>
+                        {/* <div className="flex gap-2">
+                        <span className="font-medium text-sm text-[#878A93] w-32">Email:</span>
+                        <span className="text-sm text-black">{project?.data?.businessId?.email}</span>
+                        </div>
+                        <div className="flex gap-2">
+                        <span className="font-medium text-sm text-[#878A93] w-32">Phone:</span>
+                        <span className="text-sm text-black">{project?.data?.businessId?.phone}</span>
+                        </div> */}
+                        <div className="flex gap-2">
+                        <span className="font-medium text-sm text-[#878A93] w-32">Due Date:</span>
+                        <span className="text-sm text-black">
+                            {new Date(project?.data?.dueDate).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                            })}
+                        </span>
+                        </div>
+                        <div className="flex gap-2">
+                        <span className="font-medium text-sm text-[#878A93] w-32">Status:</span>
+                        <span className="text-sm capitalize text-black">{project?.data?.status}</span>
                         </div>
                     </div>
+                    </div>
+
+                    <div className="flex flex-col gap-4">
+                    <span className="font-semibold text-xl text-black">Resources</span>
                     <div className="flex gap-4">
+                        {project?.data?.resources.map((url: string, idx: number) => (
+                        <img
+                            key={idx}
+                            src={url}
+                            alt="Project resource"
+                            className="w-40 h-28 object-cover rounded-md border"
+                        />
+                        ))}
+                    </div>
+                </div>
+                <div className="flex gap-4">
                         <Button disabled={isPending} onClick={() => handleAcceptDecline("accepted", project.id)} className="bg-primary text-white w-fit text-xs rounded-[14px] px-4 py-6">{isPending ? 'Accepting match...' : 'Accept Match'}</Button>
                         <Button disabled={isPending}
                             variant={'destructive'}
@@ -94,7 +115,6 @@ const ProjectInvitePage = () => {
                             {isPending ? 'Declining match...' : 'Decline Match'}
                         </Button>
                     </div>
-                </div>
             </div>
 
             <Dialog open={showDeclineModal} onOpenChange={setShowDeclineModal}>

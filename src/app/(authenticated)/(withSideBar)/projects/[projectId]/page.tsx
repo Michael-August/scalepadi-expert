@@ -9,7 +9,7 @@ import { Users2, Clock, Church, Download, File, Plus, Link, X } from "lucide-rea
 import { useState } from "react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
-import { useGetProject } from "@/hooks/useProject";
+import { useGetProject, useGetTasksForProject } from "@/hooks/useProject";
 import moment from "moment";
 
 const ProjectDetails = () => {
@@ -19,6 +19,7 @@ const ProjectDetails = () => {
     const { projectId } = useParams()
     
     const { project, isLoading } = useGetProject(projectId as string)
+    const { tasks, isLoading: isLoadingTasks } = useGetTasksForProject(projectId as string)
 
     const [openTaskDeliverablesForm, setOpenTaskDeliverablesForm] = useState(false)
     const [openTaskSuccessModal, setOpenTaskSuccessModal] = useState(false)
@@ -173,6 +174,38 @@ const ProjectDetails = () => {
                             <span className="text-[#727374] text-sm font-normal">Here’s your personalized task plan for this project.Complete each deliverable, upload your work, and mark it done when ready.</span>
                             <span className="text-sm text-[#3E4351] font-semibold">All tasks must be submitted before the final delivery is approved.</span>
                         </div>
+
+                        {isLoadingTasks ? <div>Loading tasks...</div> : tasks?.data?.length === 0 ? <div>No tasks available</div> :
+                        tasks?.data?.map((task: any, index: number) => (
+                            <div key={index} className="flex flex-col gap-5">
+                                <div className="bg-[#FBFCFC] p-3 rounded-2xl flex flex-col gap-4">
+                                    <span className="text-[#878A93] text-sm font-medium">Task {index + 1}: <span className="text-[#1A1A1A]">{task.title}</span></span>
+                                    <span className="text-[#727374] text-sm">{task.description}</span>
+                                    <div className="flex items-center gap-3">
+                                        <span onClick={() => { setOpenTaskDeliverablesForm(true); }} className="bg-white border w-fit border-[#E7E8E9] text-[#0E1426] text-xs p-2 rounded-[10px] cursor-pointer">Add tasks deliverables</span>
+                                        {task.documents && task.documents.length > 0 && task.documents.map((doc: string, docIndex: number) => (
+                                            <a
+                                                key={docIndex}
+                                                href={doc}
+                                                download
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                            >
+                                                <div className="flex items-center gap-2 p-1 bg-[#F7F9F9] rounded-3xl">
+                                                    <File className="w-4 h-4 text-primary" />
+                                                    <span className="text-[#878A93] text-[8px] truncate max-w-[120px]">
+                                                        {doc.split("/").pop()} {/* show only file name */}
+                                                    </span>
+                                                    <Download className="w-4 h-4 text-[#878A93] cursor-pointer" />
+                                                </div>
+                                            </a>
+                                        ))
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        ))
+                        }
                     
                         <div className="flex flex-col gap-5">
                             <div className="bg-[#FBFCFC] p-3 rounded-2xl flex flex-col gap-4">

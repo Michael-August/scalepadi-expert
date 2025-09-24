@@ -35,7 +35,7 @@ export const useGetProject = (projectId: string) => {
         queryKey: ["projects", projectId],
         queryFn: async () => {
             try {
-                const response = await axiosClient.get(`/project/${projectId}`)
+                const response = await axiosClient.get(`/project/${projectId}/expert`)
                 if (response.data?.status === false) {
                     throw new Error(response.data?.message || "Failed to fetch project");
                 }
@@ -56,7 +56,7 @@ export const useGetProject = (projectId: string) => {
     })
 
     return { project: data, isLoading }
-}   
+}  
 
 export const useAcceptDeclineMatch = () => { 
     const queryClient = useQueryClient()
@@ -87,5 +87,91 @@ export const useAcceptDeclineMatch = () => {
     })
 
     return { acceptOrDecline, isPending }
+}
+
+export const useGetTasksForProject = (projectId: string) => {
+    const { data, isLoading } = useQuery({
+        queryKey: ["tasks", projectId],
+        queryFn: async () => {
+            try {
+                const response = await axiosClient.get(`/tasks/${projectId}/expert`)
+                if (response.data?.status === false) {
+                    throw new Error(response.data?.message || "Failed to fetch tasks");
+                }
+                return response.data
+            } catch (error: any) {
+                if (error instanceof AxiosError) {
+                    toast.error(error.response?.data?.message || "Failed to fetch tasks")
+                } else if (error instanceof Error) {
+                    toast.error(error.message)
+                } else {
+                    toast.error("An unexpected error occured while fetching tasks")
+                }
+
+                throw error;
+            }
+        },
+        enabled: !!projectId
+    })
+
+    return { tasks: data, isLoading }
+}
+
+export const useGetBusinessHire = () => {
+    const { data, isLoading } = useQuery({
+        queryKey: ["Hires"],
+        queryFn: async () => {
+            try {
+                const response = await axiosClient.get(`/hires/expert`)
+                if (response.data?.status === false) {
+                    throw new Error(response.data?.message || "Failed to fetch hires");
+                }
+                return response.data
+            } catch (error: any) {
+                if (error instanceof AxiosError) {
+                    toast.error(error.response?.data?.message || "Failed to fetch hires")
+                } else if (error instanceof Error) {
+                    toast.error(error.message)
+                } else {
+                    toast.error("An unexpected error occured while fetching hires")
+                }
+
+                throw error;
+            }
+        },
+    })
+
+    return { hires: data, isLoading }
+}
+
+export const useAcceptDeclineHire = () => { 
+    const queryClient = useQueryClient()
+    const { mutate: acceptOrDeclineHire, isPending } = useMutation({
+        mutationFn: async (data: { expertStatus: "Accepted" | "Declined", hireId: string}) => {
+            try {
+                const response = await axiosClient.put(`/hire/expert/${data?.hireId}`, {expertStatus: data.expertStatus})
+                if (response.data?.status === false) {
+                    throw new Error(response.data?.message || `Failed to ${data.expertStatus} match`);
+                }
+                return response.data
+            } catch (error: any) {
+                if (error instanceof AxiosError) {
+                    toast.error(error.response?.data?.message || `Failed to ${data.expertStatus} match`)
+                } else if (error instanceof Error) {
+                    toast.error(error.message)
+                } else {
+                    toast.error(`An unexpected error occured while trying to ${data.expertStatus} match`)
+                }
+
+                throw error;
+            }
+        },
+        onSuccess: (data) => {
+            toast.success(data.message)
+            queryClient.invalidateQueries({ queryKey: ['Hires'] })
+        }
+    })
+
+    return { acceptOrDeclineHire, isPending }
 }
 

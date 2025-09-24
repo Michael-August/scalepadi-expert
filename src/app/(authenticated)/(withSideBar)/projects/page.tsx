@@ -95,15 +95,16 @@ const Dashboard = () => {
                                                     <Clock className="w-4 h-4" />
                                                     Due: <span className="text-[#121217]">{new Date(project.dueDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}</span>
                                                 </span>
+                                                <span className="flex items-center gap-[2px] text-sm text-[#878A93]">
+                                                    <Church className="w-4 h-4" />
+                                                    Status: <span className="text-[#121217]">{project.status === 'in-progress' ? 'In progress' : project.status}</span>
+                                                </span>
                                             </div>
                                         </div>
                                         <div className="flex flex-col gap-1">
                                             <span className="text-sm text-[#878A93] ">{project.client?.name}</span>
                                             <div className="items-center gap-1 flex">
-                                                <span className="flex items-center gap-[2px] text-sm text-[#878A93]">
-                                                    <Church className="w-4 h-4" />
-                                                    Status: <span className="text-[#121217]">{project.status === 'in-progress' ? 'In progress' : project.status}</span>
-                                                </span>
+                                                
                                             </div>
                                         </div>
                                     </div>
