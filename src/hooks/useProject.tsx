@@ -117,6 +117,34 @@ export const useGetTasksForProject = (projectId: string) => {
     return { tasks: data, isLoading }
 }
 
+export const useGetTask = (taskId: string) => {
+    const { data, isLoading } = useQuery({
+        queryKey: ["tasks", taskId],
+        queryFn: async () => {
+            try {
+                const response = await axiosClient.get(`/expert/task/${taskId}`)
+                if (response.data?.status === false) {
+                    throw new Error(response.data?.message || "Failed to fetch tasks");
+                }
+                return response.data
+            } catch (error: any) {
+                if (error instanceof AxiosError) {
+                    toast.error(error.response?.data?.message || "Failed to fetch tasks")
+                } else if (error instanceof Error) {
+                    toast.error(error.message)
+                } else {
+                    toast.error("An unexpected error occured while fetching tasks")
+                }
+
+                throw error;
+            }
+        },
+        enabled: !!taskId
+    })
+
+    return { task: data, isLoading }
+}
+
 export const useGetBusinessHire = () => {
     const { data, isLoading } = useQuery({
         queryKey: ["Hires"],
@@ -147,7 +175,7 @@ export const useGetBusinessHire = () => {
 export const useAcceptDeclineHire = () => { 
     const queryClient = useQueryClient()
     const { mutate: acceptOrDeclineHire, isPending } = useMutation({
-        mutationFn: async (data: { expertStatus: "Accepted" | "Declined", hireId: string}) => {
+        mutationFn: async (data: { expertStatus: "accepted" | "declined", hireId: string}) => {
             try {
                 const response = await axiosClient.put(`/hire/expert/${data?.hireId}`, {expertStatus: data.expertStatus})
                 if (response.data?.status === false) {

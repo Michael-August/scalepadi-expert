@@ -15,7 +15,7 @@ const navigation = [
 
 const licence = [
   { title: "Privacy Policy", href: "#" },
-  { title: "Terms of Use", href: "#" },
+  { title: "Terms of Use", href: "/terms&conditions" },
   { title: "Cookie Policy", href: "#" },
 ]
 
@@ -77,7 +77,7 @@ export default function Footer() {
                             <ul className="flex flex-col items-center justify-center md:items-start md:justify-start gap-3 md:gap-7">
                             {licence.map((item, index) => (
                                 <li key={index}>
-                                <Link href={item.href} className="text-blue-100 hover:text-white text-sm transition-colors">
+                                <Link href={item.href} target="_blank" className="text-blue-100 hover:text-white text-sm transition-colors">
                                     {item.title}
                                 </Link>
                                 </li>

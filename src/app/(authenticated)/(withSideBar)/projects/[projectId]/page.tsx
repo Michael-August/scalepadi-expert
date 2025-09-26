@@ -5,21 +5,25 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Users2, Clock, Church, Download, File, Plus, Link, X } from "lucide-react";
+import { Users2, Clock, Church, Download, File, Plus, Link, X, Link2 } from "lucide-react";
 import { useState } from "react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
-import { useGetProject, useGetTasksForProject } from "@/hooks/useProject";
+import { useGetProject, useGetTask, useGetTasksForProject } from "@/hooks/useProject";
 import moment from "moment";
+import ProjectSkeleton from "@/components/skeletons/project-details.skeleton";
+import TaskDeliverableSkeleton from "@/components/skeletons/Task-deliverables.skeleton";
 
 const ProjectDetails = () => {
 
     const [activeTab, setActiveTab] = useState<'projectOverview' | 'taskTracker'>('projectOverview')
 
     const { projectId } = useParams()
+    const [taskId, setTaskId] = useState("")
     
     const { project, isLoading } = useGetProject(projectId as string)
     const { tasks, isLoading: isLoadingTasks } = useGetTasksForProject(projectId as string)
+    const { task, isLoading: isLoadingTask } = useGetTask(taskId)
 
     const [openTaskDeliverablesForm, setOpenTaskDeliverablesForm] = useState(false)
     const [openTaskSuccessModal, setOpenTaskSuccessModal] = useState(false)
@@ -107,64 +111,69 @@ const ProjectDetails = () => {
                     </div>
                 </div>
                 {activeTab === 'projectOverview' && <div className="w-full border border-[#F2F2F2] rounded-2xl p-6 flex flex-col gap-6">
-                    <div className="flex flex-col gap-2">
-                        <span className="text-[#1A1A1A] text-sm font-normal">Project brief</span>
-                        {/* <div
-                            className="prose max-w-none"
-                            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(yourContent) }}
-                        /> */}
-                        <span className="text-sm text-[#727374]">
-                            {project?.data?.brief}
-                        </span>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                        <span className="text-[#1A1A1A] text-sm font-normal">Goal</span>
-                        <span className="text-sm text-[#727374]">{ project?.data?.goal }</span>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                        <span className="text-[#1A1A1A] text-sm font-normal">Challenge</span>
-                        <span className="text-sm text-[#727374]">Increase weekly customer sign-ups by 30% in 6 weeks through acquisition funnel optimization and sales outreach.</span>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                        <span className="text-[#1A1A1A] text-sm font-normal">Metrics to Influence</span>
-                        <ul className="list-none flex flex-col gap-2 text-sm text-[#727374]">
-                            <li>Weekly Sign-Ups</li>
-                            <li>Landing Page Conversion Rate</li>
-                            <li>CPA (Cost per Acquisition)</li>
-                            <li>Referral Rate</li>
-                        </ul>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                        <span className="text-[#1A1A1A] text-sm font-normal">Resources</span>
-                        {project?.data?.resources?.map((resource: string, index: number) => (
-                            <div key={index} className="flex items-center gap-[10px]">
-                                <div className="flex items-center gap-2 p-1 bg-[#F7F9F9] rounded-3xl">
-                                <File className="w-4 h-4 text-primary" />
-                                <span className="text-[#878A93] text-[8px] truncate max-w-[120px]">
-                                    {resource.split("/").pop()} {/* show only file name */}
+                    {isLoading && <ProjectSkeleton />}
+                    {!isLoading && 
+                        <>
+                            <div className="flex flex-col gap-2">
+                                <span className="text-[#1A1A1A] text-sm font-normal">Project brief</span>
+                                {/* <div
+                                    className="prose max-w-none"
+                                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(yourContent) }}
+                                /> */}
+                                <span className="text-sm text-[#727374]">
+                                    {project?.data?.brief}
                                 </span>
-                                <a
-                                    href={resource}
-                                    download
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                >
-                                    <Download className="w-4 h-4 text-[#878A93] cursor-pointer" />
-                                </a>
-                                </div>
                             </div>
-                        ))}
-                        
-                    </div>
-                    <div className="flex flex-col gap-2">
-                        <span className="text-[#1A1A1A] text-sm font-normal">Deliverables</span>
-                        <ul className="list-none flex flex-col gap-2 text-sm text-[#727374]">
-                            <li>Weekly Sign-Ups</li>
-                            <li>Landing Page Conversion Rate</li>
-                            <li>CPA (Cost per Acquisition)</li>
-                            <li>Referral Rate</li>
-                        </ul>
-                    </div>
+                            <div className="flex flex-col gap-2">
+                                <span className="text-[#1A1A1A] text-sm font-normal">Goal</span>
+                                <span className="text-sm text-[#727374]">{ project?.data?.goal }</span>
+                            </div>
+                            <div className="flex flex-col gap-2">
+                                <span className="text-[#1A1A1A] text-sm font-normal">Challenge</span>
+                                <span className="text-sm text-[#727374]">Increase weekly customer sign-ups by 30% in 6 weeks through acquisition funnel optimization and sales outreach.</span>
+                            </div>
+                            {/* <div className="flex flex-col gap-2">
+                                <span className="text-[#1A1A1A] text-sm font-normal">Metrics to Influence</span>
+                                <ul className="list-none flex flex-col gap-2 text-sm text-[#727374]">
+                                    <li>Weekly Sign-Ups</li>
+                                    <li>Landing Page Conversion Rate</li>
+                                    <li>CPA (Cost per Acquisition)</li>
+                                    <li>Referral Rate</li>
+                                </ul>
+                            </div> */}
+                            <div className="flex flex-col gap-2">
+                                {project?.data?.resources?.length > 0 && <span className="text-[#1A1A1A] text-sm font-normal">Resources</span>}
+                                {project?.data?.resources?.map((resource: string, index: number) => (
+                                    <div key={index} className="flex items-center gap-[10px]">
+                                        <div className="flex items-center gap-2 p-1 bg-[#F7F9F9] rounded-3xl">
+                                        <File className="w-4 h-4 text-primary" />
+                                        <span className="text-[#878A93] text-[8px] truncate max-w-[120px]">
+                                            {resource.split("/").pop()} {/* show only file name */}
+                                        </span>
+                                        <a
+                                            href={resource}
+                                            download
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
+                                            <Download className="w-4 h-4 text-[#878A93] cursor-pointer" />
+                                        </a>
+                                        </div>
+                                    </div>
+                                ))}
+                                
+                            </div>
+                            {/* <div className="flex flex-col gap-2">
+                                <span className="text-[#1A1A1A] text-sm font-normal">Deliverables</span>
+                                <ul className="list-none flex flex-col gap-2 text-sm text-[#727374]">
+                                    <li>Weekly Sign-Ups</li>
+                                    <li>Landing Page Conversion Rate</li>
+                                    <li>CPA (Cost per Acquisition)</li>
+                                    <li>Referral Rate</li>
+                                </ul>
+                            </div> */}
+                        </>
+                    }
                 </div>}
 
                 {activeTab === 'taskTracker' &&
@@ -176,49 +185,146 @@ const ProjectDetails = () => {
                         </div>
 
                         {isLoadingTasks ? <div>Loading tasks...</div> : tasks?.data?.length === 0 ? <div>No tasks available</div> :
-                        tasks?.data?.map((task: any, index: number) => (
-                            <div key={index} className="flex flex-col gap-5">
-                                <div className="bg-[#FBFCFC] p-3 rounded-2xl flex flex-col gap-4">
-                                    <span className="text-[#878A93] text-sm font-medium">Task {index + 1}: <span className="text-[#1A1A1A]">{task.title}</span></span>
-                                    <span className="text-[#727374] text-sm">{task.description}</span>
-                                    <div className="flex items-center gap-3">
-                                        <span onClick={() => { setOpenTaskDeliverablesForm(true); }} className="bg-white border w-fit border-[#E7E8E9] text-[#0E1426] text-xs p-2 rounded-[10px] cursor-pointer">Add tasks deliverables</span>
-                                        {task.documents && task.documents.length > 0 && task.documents.map((doc: string, docIndex: number) => (
-                                            <a
-                                                key={docIndex}
-                                                href={doc}
-                                                download
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                            >
-                                                <div className="flex items-center gap-2 p-1 bg-[#F7F9F9] rounded-3xl">
-                                                    <File className="w-4 h-4 text-primary" />
-                                                    <span className="text-[#878A93] text-[8px] truncate max-w-[120px]">
-                                                        {doc.split("/").pop()} {/* show only file name */}
-                                                    </span>
-                                                    <Download className="w-4 h-4 text-[#878A93] cursor-pointer" />
+                            tasks?.data?.map((task: any, index: number) => (
+                                <div key={index} className="flex flex-col gap-5">
+                                    <div className="bg-[#FBFCFC] p-3 rounded-2xl flex flex-col gap-4">
+                                        <span className="text-[#878A93] text-sm font-medium">Task {index + 1}: <span className="text-[#1A1A1A]">{task.title}</span></span>
+                                        <span className="text-[#727374] text-sm">{task.description}</span>
+
+                                        {/* Documents */}
+                                        {((task.link && task.link.length > 0) ||
+                                            (task.document && task.document.length > 0)) && (
+                                            <div className="flex flex-col gap-3">
+                                                <span className="text-[#878A93] text-sm font-medium mt-4">Task Resources</span>
+                                                {/* Links */}
+                                                {task.link && task.link.length > 0 && (
+                                                <div className="flex flex-wrap gap-2">
+                                                    {task.link.map((link: string, index: number) => (
+                                                    <div
+                                                        key={index}
+                                                        className="flex items-center gap-2 p-2 border border-[#EDEEF3] rounded-xl flex-1 min-w-0"
+                                                    >
+                                                        <Link2 />
+                                                        <input
+                                                        type="text"
+                                                        className="w-full outline-none text-sm text-[#727374] bg-transparent"
+                                                        value={link}
+                                                        readOnly
+                                                        />
+                                                    </div>
+                                                    ))}
                                                 </div>
-                                            </a>
-                                        ))
-                                        }
+                                                )}
+
+                                                {/* Documents */}
+                                                {task.document && task.document.length > 0 && (
+                                                <div className="flex flex-wrap gap-2">
+                                                    {task.document.map((doc: string, index: number) => (
+                                                    <div
+                                                        key={index}
+                                                        className="flex items-center justify-between p-2 border border-[#EDEEF3] rounded-xl flex-1 min-w-0"
+                                                    >
+                                                        <div className="flex items-center gap-2">
+                                                        <Image
+                                                            src="/icons/file-icon.svg"
+                                                            alt="file icon"
+                                                            width={16}
+                                                            height={16}
+                                                        />
+                                                        <div className="flex flex-col min-w-0">
+                                                            <span className="text-sm font-medium text-[#1A1A1A] truncate">
+                                                            Document {index + 1}
+                                                            </span>
+                                                            <span className="text-xs text-[#878A93]">
+                                                            PDF File
+                                                            </span>
+                                                        </div>
+                                                        </div>
+                                                        <a
+                                                        href={doc}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        >
+                                                        <Download className="w-4 h-4 text-[#878A93] cursor-pointer hover:text-primary" />
+                                                        </a>
+                                                    </div>
+                                                    ))}
+                                                </div>
+                                                )}
+                                            </div>
+                                            )}
+                                        
+                                        {/* Submissions */}
+                                        {((task.submission && task.submission.length > 0)) && (
+                                            <div className="flex flex-col gap-3">
+                                                <span className="text-[#878A93] text-sm font-medium mt-4">Submissions</span>
+                                                {/* Links */}
+                                                {task.link && task.link.length > 0 && (
+                                                <div className="flex flex-wrap gap-2">
+                                                    {task.link.map((link: string, index: number) => (
+                                                    <div
+                                                        key={index}
+                                                        className="flex items-center gap-2 p-2 border border-[#EDEEF3] rounded-xl flex-1 min-w-0"
+                                                    >
+                                                        <Link2 />
+                                                        <input
+                                                        type="text"
+                                                        className="w-full outline-none text-sm text-[#727374] bg-transparent"
+                                                        value={link}
+                                                        readOnly
+                                                        />
+                                                    </div>
+                                                    ))}
+                                                </div>
+                                                )}
+
+                                                {/* Documents */}
+                                                {task.document && task.document.length > 0 && (
+                                                <div className="flex flex-wrap gap-2">
+                                                    {task.document.map((doc: string, index: number) => (
+                                                    <div
+                                                        key={index}
+                                                        className="flex items-center justify-between p-2 border border-[#EDEEF3] rounded-xl flex-1 min-w-0"
+                                                    >
+                                                        <div className="flex items-center gap-2">
+                                                        <Image
+                                                            src="/icons/file-icon.svg"
+                                                            alt="file icon"
+                                                            width={16}
+                                                            height={16}
+                                                        />
+                                                        <div className="flex flex-col min-w-0">
+                                                            <span className="text-sm font-medium text-[#1A1A1A] truncate">
+                                                            Document {index + 1}
+                                                            </span>
+                                                            <span className="text-xs text-[#878A93]">
+                                                            PDF File
+                                                            </span>
+                                                        </div>
+                                                        </div>
+                                                        <a
+                                                        href={doc}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        >
+                                                        <Download className="w-4 h-4 text-[#878A93] cursor-pointer hover:text-primary" />
+                                                        </a>
+                                                    </div>
+                                                    ))}
+                                                </div>
+                                                )}
+                                            </div>
+                                        )}
+                                        <div className="flex items-center gap-3">
+                                            <span onClick={() => { 
+                                                setTaskId(task.id);
+                                                setOpenTaskDeliverablesForm(true);
+                                             }} className="bg-white border w-fit border-[#E7E8E9] text-[#0E1426] text-xs p-2 rounded-[10px] cursor-pointer">Add tasks deliverables</span>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))
+                            ))
                         }
-                    
-                        <div className="flex flex-col gap-5">
-                            <div className="bg-[#FBFCFC] p-3 rounded-2xl flex flex-col gap-4">
-                                <span className="text-[#878A93] text-sm font-medium">Task 1: <span className="text-[#1A1A1A]">Audit the current acquisition funnel</span></span>
-                                <span className="text-[#727374] text-sm">Review GreenMart’s landing pages, sign-up process, and paid traffic sources. Identify key drop-off points and capture screenshots where applicable.</span>
-                                <span onClick={() => setOpenTaskDeliverablesForm(true)} className="bg-white border w-fit border-[#E7E8E9] text-[#0E1426] text-xs p-2 rounded-[10px] cursor-pointer">Add tasks deliverables</span>
-                            </div>
-                            <div className="bg-[#FBFCFC] p-3 rounded-2xl flex flex-col gap-4">
-                                <span className="text-[#878A93] text-sm font-medium">Task 1: <span className="text-[#1A1A1A]">Audit the current acquisition funnel</span></span>
-                                <span className="text-[#727374] text-sm">Review GreenMart’s landing pages, sign-up process, and paid traffic sources. Identify key drop-off points and capture screenshots where applicable.</span>
-                                <span className="bg-white border w-fit border-[#E7E8E9] text-[#0E1426] text-xs p-2 rounded-[10px] cursor-pointer">Add tasks deliverables</span>
-                            </div>
-                        </div>
                     </div>
                 }
             </div>
@@ -228,87 +334,91 @@ const ProjectDetails = () => {
                     <DialogTitle>
                         Task Deliverables update
                     </DialogTitle>
-                    <form className="flex flex-col gap-6 mt-5">
-                        <div className="flex flex-col gap-4">
-                            <div className="flex flex-col gap-2">
-                                <Label className="text-[#0E1426] text-sm font-normal">Task deliverables title</Label>
-                                <Input className="rounded-[14px] py-5 px-4 border focus:border-[#FEE1BA] border-[#D1DAEC]" type="text" placeholder="Enter Deliverables title" />
-                            </div>
-                            <div className="flex flex-col gap-2">
-                                <Label className="text-[#0E1426] text-sm font-normal">Task deliverables description</Label>
-                                <Textarea className="rounded-[14px] focus:border-[#FEE1BA] py-6 px-4 border border-[#D1DAEC]" placeholder="Enter Deliverables title" />
-                            </div>
-                            <div onClick={() => setAddLink(!addLink)} className="flex flex-col gap-2">
-                                <Label className="text-[#0E1426] text-sm font-normal">Task Link</Label>
-                                <div className="w-fit bg-[#FFFFFF] border rounded-[10px] cursor-pointer border-[#D1DAEC80] p-2 flex items-center gap-2">
-                                    <Plus className="w-4 h-4" />
-                                    <span className="text-[#1A1A1A] text-xs font-normal">Add task link</span>
+                    {isLoadingTask && <TaskDeliverableSkeleton />}
+                    {!isLoadingTask && task && 
+                        
+                        <form className="flex flex-col gap-6 mt-5">
+                            <div className="flex flex-col gap-4">
+                                <div className="flex flex-col gap-2">
+                                    <Label className="text-[#0E1426] text-sm font-normal">Task deliverables title</Label>
+                                    <Input value={task?.data?.title} className="rounded-[14px] py-5 px-4 border focus:border-[#FEE1BA] border-[#D1DAEC]" type="text" placeholder="Enter Deliverables title" />
                                 </div>
-                            </div>
-                            {links.length > 0 && 
-                                <div className="flex flex-wrap gap-4">
-                                    {links.map((link, index) => (
-                                        <div key={index} className="flex items-center gap-1">
-                                            <div className="flex items-center gap-1 border border-[#ABC6FB] bg-white rounded-[8.4px] py-[6px] px-[4.8px]">
-                                                <Link className="w-4 h-4 text-[#FF5F6D]" />
-                                                <span className="text-[#878A93] text-xs">{link.url}</span>
-                                            </div>
-                                            <div className="flex items-center justify-center w-3 h-3 bg-[#BCC2C7] rounded-full cursor-pointer">
-                                                <X onClick={() => setLinks(links.filter(li => li.title !== link.title))} className="text-[#878A93] cursor-pointer" />
-                                            </div>
-                                        </div>
-                                    ))}
+                                <div className="flex flex-col gap-2">
+                                    <Label className="text-[#0E1426] text-sm font-normal">Task deliverables description</Label>
+                                    <Textarea value={task?.data?.description} className="rounded-[14px] focus:border-[#FEE1BA] py-6 px-4 border border-[#D1DAEC]" placeholder="Enter Deliverables title" />
                                 </div>
-                            }
-                            {addLink && 
-                                <div className="flex flex-col gap-4">
-                                    <div className="flex flex-col gap-2">
-                                        <Label className="text-[#0E1426] text-sm font-normal">Link Title</Label>
-                                        <Input value={linkTitle} onChange={(e) => setLinkTitle(e.target.value)} className="rounded-[14px] py-5 px-4 border focus:border-[#FEE1BA] border-[#D1DAEC]" type="text" placeholder="Analytics resource" />
+                                <div onClick={() => setAddLink(!addLink)} className="flex flex-col gap-2">
+                                    <Label className="text-[#0E1426] text-sm font-normal">Task Link</Label>
+                                    <div className="w-fit bg-[#FFFFFF] border rounded-[10px] cursor-pointer border-[#D1DAEC80] p-2 flex items-center gap-2">
+                                        <Plus className="w-4 h-4" />
+                                        <span className="text-[#1A1A1A] text-xs font-normal">Add task link</span>
                                     </div>
-                                    <div className="flex flex-col gap-2">
-                                        <Label className="text-[#0E1426] text-sm font-normal">Test link</Label>
-                                        <Input value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} className="rounded-[14px] py-2 px-3 border focus:border-[#FEE1BA] border-[#D1DAEC]" type="text" placeholder="https://" />
-                                    </div>
-                                    <Button onClick={() => { setLinks([...links, { title: linkTitle, url: linkUrl }]); setAddLink(false); setLinkTitle(''); setLinkUrl('')}} className="bg-primary text-white w-fit text-xs rounded-[14px] px-4 py-6">Save resource</Button>
                                 </div>
-                            }
-                            <div className="flex flex-col gap-2">
-                                <Label className="text-[#0E1426] text-sm font-normal">Task document</Label>
-
-                                <label htmlFor="task-upload" className="w-fit bg-white border rounded-[10px] cursor-pointer border-[#D1DAEC80] p-2 flex items-center gap-2">
-                                    <Plus className="w-4 h-4" />
-                                    <span className="text-[#1A1A1A] text-xs font-normal">Add task document</span>
-                                </label>
-
-                                <input
-                                    id="task-upload"
-                                    type="file"
-                                    className="hidden"
-                                    multiple
-                                    onChange={handleAddDocument}
-                                />
-                            </div>
-                            
-                            {documents.length > 0 && 
-                                <div className="flex flex-wrap gap-4">
-                                    {documents.map((doc, index) => (
-                                        <div key={index} className="flex items-center gap-1">
-                                            <div className="flex items-center gap-1 border border-[#ABC6FB] bg-white rounded-[8.4px] p-[7.3px]">
-                                                <Image src={'/icons/file-icon.svg'} alt="File icon" width={20} height={20} />
-                                                <span className="text-[#878A93] text-xs">{doc.title}</span>
+                                {links.length > 0 && 
+                                    <div className="flex flex-wrap gap-4">
+                                        {links.map((link, index) => (
+                                            <div key={index} className="flex items-center gap-1">
+                                                <div className="flex items-center gap-1 border border-[#ABC6FB] bg-white rounded-[8.4px] py-[6px] px-[4.8px]">
+                                                    <Link className="w-4 h-4 text-[#FF5F6D]" />
+                                                    <span className="text-[#878A93] text-xs">{link.url}</span>
+                                                </div>
+                                                <div className="flex items-center justify-center w-3 h-3 bg-[#BCC2C7] rounded-full cursor-pointer">
+                                                    <X onClick={() => setLinks(links.filter(li => li.title !== link.title))} className="text-[#878A93] cursor-pointer" />
+                                                </div>
                                             </div>
-                                            <div className="flex items-center justify-center w-3 h-3 bg-[#BCC2C7] rounded-full cursor-pointer">
-                                                <X onClick={() => setDocuments(documents.filter(d => d.title !== doc.title))} className="text-[#878A93] cursor-pointer" />
-                                            </div> 
+                                        ))}
+                                    </div>
+                                }
+                                {addLink && 
+                                    <div className="flex flex-col gap-4">
+                                        <div className="flex flex-col gap-2">
+                                            <Label className="text-[#0E1426] text-sm font-normal">Link Title</Label>
+                                            <Input value={linkTitle} onChange={(e) => setLinkTitle(e.target.value)} className="rounded-[14px] py-5 px-4 border focus:border-[#FEE1BA] border-[#D1DAEC]" type="text" placeholder="Analytics resource" />
                                         </div>
-                                    ))}
+                                        <div className="flex flex-col gap-2">
+                                            <Label className="text-[#0E1426] text-sm font-normal">Test link</Label>
+                                            <Input value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} className="rounded-[14px] py-2 px-3 border focus:border-[#FEE1BA] border-[#D1DAEC]" type="text" placeholder="https://" />
+                                        </div>
+                                        <Button onClick={() => { setLinks([...links, { title: linkTitle, url: linkUrl }]); setAddLink(false); setLinkTitle(''); setLinkUrl('')}} className="bg-primary text-white w-fit text-xs rounded-[14px] px-4 py-6">Save resource</Button>
+                                    </div>
+                                }
+                                <div className="flex flex-col gap-2">
+                                    <Label className="text-[#0E1426] text-sm font-normal">Task document</Label>
+
+                                    <label htmlFor="task-upload" className="w-fit bg-white border rounded-[10px] cursor-pointer border-[#D1DAEC80] p-2 flex items-center gap-2">
+                                        <Plus className="w-4 h-4" />
+                                        <span className="text-[#1A1A1A] text-xs font-normal">Add task document</span>
+                                    </label>
+
+                                    <input
+                                        id="task-upload"
+                                        type="file"
+                                        className="hidden"
+                                        multiple
+                                        onChange={handleAddDocument}
+                                    />
                                 </div>
-                            }
-                        </div>
-                            
-                        <Button className="bg-primary text-white w-fit rounded-[14px] px-4 py-6">Save task</Button>
-                    </form>
+                                
+                                {documents.length > 0 && 
+                                    <div className="flex flex-wrap gap-4">
+                                        {documents.map((doc, index) => (
+                                            <div key={index} className="flex items-center gap-1">
+                                                <div className="flex items-center gap-1 border border-[#ABC6FB] bg-white rounded-[8.4px] p-[7.3px]">
+                                                    <Image src={'/icons/file-icon.svg'} alt="File icon" width={20} height={20} />
+                                                    <span className="text-[#878A93] text-xs">{doc.title}</span>
+                                                </div>
+                                                <div className="flex items-center justify-center w-3 h-3 bg-[#BCC2C7] rounded-full cursor-pointer">
+                                                    <X onClick={() => setDocuments(documents.filter(d => d.title !== doc.title))} className="text-[#878A93] cursor-pointer" />
+                                                </div> 
+                                            </div>
+                                        ))}
+                                    </div>
+                                }
+                            </div>
+                                
+                            <Button className="bg-primary text-white w-fit rounded-[14px] px-4 py-6">Save task</Button>
+                        </form>
+                    }
                 </DialogContent>
             </Dialog>
             

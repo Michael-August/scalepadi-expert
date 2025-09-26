@@ -42,21 +42,21 @@ const Opportunities = () => {
         });
     }
 
-    const handleAcceptDeclineHire = (action: 'Accepted' | 'Declined', hireId: string) => {
+    const handleAcceptDeclineHire = (action: 'accepted' | 'declined', hireId: string) => {
         if (!hireId) {
             return;
         }
         acceptOrDeclineHire({ expertStatus: action, hireId}, {
             onSuccess: () => {
                 toast.success(`Hire ${action} successfully`)
-                if(action === 'Declined') {
+                if(action === 'declined') {
                     router.push('/opportunities')
                     return
                 }
                 router.push(`/opportunities/`)
             },
             onError: () => {
-                toast.error(`Error ${action === 'Accepted' ? 'accepting' : 'declining'} hire`)
+                toast.error(`Error ${action === 'accepted' ? 'accepting' : 'declining'} hire`)
             }
         });
     }
@@ -212,16 +212,16 @@ const Opportunities = () => {
                                         </div>
 
                                         {hire?.expertStatus === "awaiting-response" && <div className="flex gap-4">
-                                            <Button disabled={isPendingHire} onClick={() => handleAcceptDeclineHire("Accepted", hire.id)} className="bg-primary text-white w-fit text-xs rounded-[14px]">{isPendingHire ? 'Accepting...' : 'Accept'}</Button>
+                                            <Button disabled={isPendingHire} onClick={() => handleAcceptDeclineHire("accepted", hire.id)} className="bg-primary text-white w-fit text-xs rounded-[14px]">{isPendingHire ? 'Accepting...' : 'Accept'}</Button>
                                             <Button disabled={isPendingHire}
                                                 variant={'destructive'}
-                                                onClick={() => handleAcceptDeclineHire("Declined", hire.id)} className="w-fit text-xs rounded-[14px]"
+                                                onClick={() => handleAcceptDeclineHire("declined", hire.id)} className="w-fit text-xs rounded-[14px]"
                                             >
                                                 {isPendingHire ? 'Declining...' : 'Decline'}
                                             </Button>
                                         </div>}
-                                        {hire?.expertStatus === "Accepted" && <span className="text-sm text-green-600 font-medium">You have accepted this hire.</span>}
-                                        {hire?.expertStatus === "Declined" && <span className="text-sm text-red-600 font-medium">You have declined this hire.</span>}
+                                        {hire?.expertStatus === "accepted" && <span className="text-sm text-green-600 font-medium">You have accepted this hire.</span>}
+                                        {hire?.expertStatus === "declined" && <span className="text-sm text-red-600 font-medium">You have declined this hire.</span>}
                                     </div>
                                 ))}
                             </div>

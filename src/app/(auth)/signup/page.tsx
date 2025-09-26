@@ -1,6 +1,5 @@
 "use client"
 
-import 'react-phone-input-2/lib/style.css';
 import PhoneInput from 'react-phone-input-2';
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -17,6 +16,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useSignUp } from '@/hooks/useAuth';
+
+import 'react-phone-input-2/lib/style.css';
 
 const signupFormSchema = z.object({
     name: z.string().min(1, "Full name is required"),
@@ -104,7 +105,7 @@ const SignUp = () => {
                                 if (selected === "expert") {
                                     setPageState("create-account");
                                 } else {
-                                    window.location.href = "https://external-website.com"; // replace with your link
+                                    window.location.href = "https://business.scalepadi.com"; // replace with your link
                                 }
                             }}
                             className="bg-primary text-white w-fit rounded-[14px] px-4 py-6"
@@ -235,7 +236,7 @@ const SignUp = () => {
                                                                 />
                                                                 <span className="text-sm text-[#878A93]">
                                                                     By signing up, you agree to our{" "}
-                                                                    <span className="text-primary cursor-pointer">Terms</span>.
+                                                                    <Link href={'/terms&conditions'} target='_blank' className="text-primary cursor-pointer">Terms</Link>.
                                                                 </span>
                                                             </div>
 
@@ -248,7 +249,7 @@ const SignUp = () => {
                                             </div>
                                         </div>
                                     </div>
-                                    <Button type='submit' disabled={isPending} className="bg-primary text-white w-fit rounded-[14px] px-4 py-6">{isPending ? 'creating account...' : 'Create my account'}</Button>
+                                    <Button type='submit' disabled={isPending} className="bg-primary text-white w-fit rounded-[14px] px-4 py-6">{isPending ? 'Creating Account...' : 'Create my account'}</Button>
                                 </form>
                             </div>
         
