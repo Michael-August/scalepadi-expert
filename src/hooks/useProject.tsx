@@ -203,3 +203,34 @@ export const useAcceptDeclineHire = () => {
     return { acceptOrDeclineHire, isPending }
 }
 
+export const useSubmitTask = (taskId: string) => { 
+    const queryClient = useQueryClient()
+    const { mutate: submitTask, isPending } = useMutation({
+        mutationFn: async (data: any) => {
+            try {
+                const response = await axiosClient.put(`/task/submit/${taskId}`, data)
+                if (response.data?.status === false) {
+                    throw new Error(response.data?.message || `Failed to submit task`);
+                }
+                return response.data
+            } catch (error: any) {
+                if (error instanceof AxiosError) {
+                    toast.error(error.response?.data?.message || `Failed to submit task`)
+                } else if (error instanceof Error) {
+                    toast.error(error.message)
+                } else {
+                    toast.error(`An unexpected error occured while trying to submit task`)
+                }
+
+                throw error;
+            }
+        },
+        onSuccess: (data) => {
+            toast.success(data.message)
+            queryClient.invalidateQueries({ queryKey: ['tasks', taskId] })
+        }
+    })
+
+    return { submitTask, isPending }
+}
+

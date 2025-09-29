@@ -21,9 +21,9 @@ export const Routes = [
         route: "/messages",
         icon: MessageCircleMore
     },
-    {
-        name: "Resources",
-        route: "/resources",
-        icon: Shapes
-    },
+    // {
+    //     name: "Resources",
+    //     route: "/resources",
+    //     icon: Shapes
+    // },
 ]

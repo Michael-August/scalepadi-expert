@@ -5,14 +5,16 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Users2, Clock, Church, Download, File, Plus, Link, X, Link2 } from "lucide-react";
-import { useState } from "react";
+import { Users2, Clock, Church, Download, File, Plus, X, Link as URL, Link2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
-import { useGetProject, useGetTask, useGetTasksForProject } from "@/hooks/useProject";
+import { useGetProject, useGetTask, useGetTasksForProject, useSubmitTask } from "@/hooks/useProject";
 import moment from "moment";
 import ProjectSkeleton from "@/components/skeletons/project-details.skeleton";
 import TaskDeliverableSkeleton from "@/components/skeletons/Task-deliverables.skeleton";
+import { toast } from "sonner";
+import Link from "next/link";
 
 const ProjectDetails = () => {
 
@@ -25,15 +27,21 @@ const ProjectDetails = () => {
     const { tasks, isLoading: isLoadingTasks } = useGetTasksForProject(projectId as string)
     const { task, isLoading: isLoadingTask } = useGetTask(taskId)
 
+    const [submittedLinks, setSubmittedLinks] = useState<string[]>([])
+    const [submittedDocs, setSubmittedDocs] = useState<string[]>([])
+
+
+    const { submitTask, isPending } = useSubmitTask(taskId)
+
     const [openTaskDeliverablesForm, setOpenTaskDeliverablesForm] = useState(false)
     const [openTaskSuccessModal, setOpenTaskSuccessModal] = useState(false)
 
     const [linkTitle, setLinkTitle] = useState('');
-    const [linkUrl, setLinkUrl] = useState('');
+    const [linkUrl, setLinkUrl] = useState<any>('');
 
     const [addLink, setAddLink] = useState(false)
 
-    const [links, setLinks] = useState<{url: string, title: string}[]>([])
+    const [links, setLinks] = useState<string[]>([])
     const [documents, setDocuments] = useState<{ title: string; file: File }[]>([]);
 
     const handleAddDocument = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -47,6 +55,33 @@ const ProjectDetails = () => {
       
         setDocuments((prev) => [...prev, ...newDocs]);
     };
+
+    const onSubmitTask = (e: any) => {
+        e.preventDefault();
+
+        const formData = new FormData();
+
+        links.forEach((link, index) => {
+            formData.append(`submission[${index}]`, link);
+        });
+
+        // Append files
+        documents.forEach((doc) => {
+            formData.append("files", doc.file); // backend expects "files"
+        });
+
+        submitTask(formData, {
+            onSuccess: () => {
+                setOpenTaskDeliverablesForm(false)
+                setOpenTaskSuccessModal(true)
+                setLinks([])
+                setDocuments([])
+            },
+            onError: (error) => {
+                toast.error(`Error submitting task: ${error}`)
+            }
+        })
+    }
 
     return (
         <div className="flex w-full flex-col gap-6">
@@ -200,9 +235,11 @@ const ProjectDetails = () => {
                                                 {task.link && task.link.length > 0 && (
                                                 <div className="flex flex-wrap gap-2">
                                                     {task.link.map((link: string, index: number) => (
-                                                    <div
+                                                    <Link
                                                         key={index}
-                                                        className="flex items-center gap-2 p-2 border border-[#EDEEF3] rounded-xl flex-1 min-w-0"
+                                                        href={link}
+                                                        target="_blank"
+                                                        className="flex items-center cursor-pointer gap-2 p-2 border border-[#EDEEF3] rounded-xl flex-1 min-w-0"
                                                     >
                                                         <Link2 />
                                                         <input
@@ -211,7 +248,7 @@ const ProjectDetails = () => {
                                                         value={link}
                                                         readOnly
                                                         />
-                                                    </div>
+                                                    </Link>
                                                     ))}
                                                 </div>
                                                 )}
@@ -255,33 +292,34 @@ const ProjectDetails = () => {
                                             )}
                                         
                                         {/* Submissions */}
-                                        {((task.submission && task.submission.length > 0)) && (
+                                        {task.submission && task.submission.length > 0 && (
                                             <div className="flex flex-col gap-3">
                                                 <span className="text-[#878A93] text-sm font-medium mt-4">Submissions</span>
+                                                
                                                 {/* Links */}
-                                                {task.link && task.link.length > 0 && (
+                                                
                                                 <div className="flex flex-wrap gap-2">
-                                                    {task.link.map((link: string, index: number) => (
-                                                    <div
-                                                        key={index}
-                                                        className="flex items-center gap-2 p-2 border border-[#EDEEF3] rounded-xl flex-1 min-w-0"
-                                                    >
-                                                        <Link2 />
-                                                        <input
-                                                        type="text"
-                                                        className="w-full outline-none text-sm text-[#727374] bg-transparent"
-                                                        value={link}
-                                                        readOnly
-                                                        />
-                                                    </div>
+                                                    {(task?.submission?.filter((item: string) => !item.includes("res.cloudinary.com")) || [])?.map((link: string, index: number) => (
+                                                        <Link
+                                                            href={link}
+                                                            target="_blank"
+                                                            key={index}
+                                                            className="flex items-center cursor-pointer gap-2 p-2 border border-[#EDEEF3] rounded-xl flex-1 min-w-0"
+                                                        >
+                                                            <Link2 />
+                                                            <input
+                                                                type="text"
+                                                                className="w-full outline-none text-sm text-[#727374] bg-transparent"
+                                                                value={link}
+                                                                readOnly
+                                                            />
+                                                        </Link>
                                                     ))}
                                                 </div>
-                                                )}
 
                                                 {/* Documents */}
-                                                {task.document && task.document.length > 0 && (
                                                 <div className="flex flex-wrap gap-2">
-                                                    {task.document.map((doc: string, index: number) => (
+                                                    {(task?.submission?.filter((item: string) => item.includes("res.cloudinary.com")) || [])?.map((doc: string, index: number) => (
                                                     <div
                                                         key={index}
                                                         className="flex items-center justify-between p-2 border border-[#EDEEF3] rounded-xl flex-1 min-w-0"
@@ -297,22 +335,15 @@ const ProjectDetails = () => {
                                                             <span className="text-sm font-medium text-[#1A1A1A] truncate">
                                                             Document {index + 1}
                                                             </span>
-                                                            <span className="text-xs text-[#878A93]">
-                                                            PDF File
-                                                            </span>
+                                                            <span className="text-xs text-[#878A93]">File</span>
                                                         </div>
                                                         </div>
-                                                        <a
-                                                        href={doc}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        >
+                                                        <a href={doc} target="_blank" rel="noopener noreferrer">
                                                         <Download className="w-4 h-4 text-[#878A93] cursor-pointer hover:text-primary" />
                                                         </a>
                                                     </div>
                                                     ))}
                                                 </div>
-                                                )}
                                             </div>
                                         )}
                                         <div className="flex items-center gap-3">
@@ -359,11 +390,11 @@ const ProjectDetails = () => {
                                         {links.map((link, index) => (
                                             <div key={index} className="flex items-center gap-1">
                                                 <div className="flex items-center gap-1 border border-[#ABC6FB] bg-white rounded-[8.4px] py-[6px] px-[4.8px]">
-                                                    <Link className="w-4 h-4 text-[#FF5F6D]" />
-                                                    <span className="text-[#878A93] text-xs">{link.url}</span>
+                                                    <URL className="w-4 h-4 text-[#FF5F6D]" />
+                                                    <span className="text-[#878A93] text-xs">{link}</span>
                                                 </div>
                                                 <div className="flex items-center justify-center w-3 h-3 bg-[#BCC2C7] rounded-full cursor-pointer">
-                                                    <X onClick={() => setLinks(links.filter(li => li.title !== link.title))} className="text-[#878A93] cursor-pointer" />
+                                                    <X onClick={() => setLinks(links.filter(li => li !== link))} className="text-[#878A93] cursor-pointer" />
                                                 </div>
                                             </div>
                                         ))}
@@ -371,15 +402,15 @@ const ProjectDetails = () => {
                                 }
                                 {addLink && 
                                     <div className="flex flex-col gap-4">
-                                        <div className="flex flex-col gap-2">
+                                        {/* <div className="flex flex-col gap-2">
                                             <Label className="text-[#0E1426] text-sm font-normal">Link Title</Label>
                                             <Input value={linkTitle} onChange={(e) => setLinkTitle(e.target.value)} className="rounded-[14px] py-5 px-4 border focus:border-[#FEE1BA] border-[#D1DAEC]" type="text" placeholder="Analytics resource" />
-                                        </div>
+                                        </div> */}
                                         <div className="flex flex-col gap-2">
                                             <Label className="text-[#0E1426] text-sm font-normal">Test link</Label>
                                             <Input value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} className="rounded-[14px] py-2 px-3 border focus:border-[#FEE1BA] border-[#D1DAEC]" type="text" placeholder="https://" />
                                         </div>
-                                        <Button onClick={() => { setLinks([...links, { title: linkTitle, url: linkUrl }]); setAddLink(false); setLinkTitle(''); setLinkUrl('')}} className="bg-primary text-white w-fit text-xs rounded-[14px] px-4 py-6">Save resource</Button>
+                                        <Button onClick={() => { setLinks([...links, linkUrl]); setAddLink(false); setLinkTitle(''); setLinkUrl('')}} className="bg-primary text-white w-fit text-xs rounded-[14px] px-4 py-6">Add link</Button>
                                     </div>
                                 }
                                 <div className="flex flex-col gap-2">
@@ -416,7 +447,7 @@ const ProjectDetails = () => {
                                 }
                             </div>
                                 
-                            <Button className="bg-primary text-white w-fit rounded-[14px] px-4 py-6">Save task</Button>
+                            <Button onClick={onSubmitTask} className="bg-primary text-white w-fit rounded-[14px] px-4 py-6">{isPending ? 'Submitting...' : 'Submit task'}</Button>
                         </form>
                     }
                 </DialogContent>
