@@ -31,7 +31,7 @@ const Inquiry = () => {
 		makeEnquiry(data, {
 			onSuccess: () => {
 				toast.success("Enquiry submitted successfully");
-				router.push("/project");
+				router.push("/projects");
 			},
 			onError: () => {
 				toast.error("Error submitting enquiry");

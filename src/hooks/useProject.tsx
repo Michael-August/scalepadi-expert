@@ -343,3 +343,39 @@ export const useMakeEnquiry = () => {
 
 	return { makeEnquiry, isPending };
 };
+
+export const useGetAdmins = () => {
+	const { data, isLoading } = useQuery({
+		queryKey: ["Admins"],
+		queryFn: async () => {
+			try {
+				const response = await axiosClient.get(
+					`/admin-expert?roles=super,support,vetting`
+				);
+				if (response.data?.status === false) {
+					throw new Error(
+						response.data?.message || "Failed to fetch expert"
+					);
+				}
+				return response.data?.data;
+			} catch (error: any) {
+				if (error instanceof AxiosError) {
+					toast.error(
+						error.response?.data?.message ||
+							"Failed to fetch expert"
+					);
+				} else if (error instanceof Error) {
+					toast.error(error.message);
+				} else {
+					toast.error(
+						"An unexpected error occured while fetching expert"
+					);
+				}
+
+				throw error;
+			}
+		},
+	});
+
+	return { admins: data, isLoading };
+};
