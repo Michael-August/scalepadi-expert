@@ -436,12 +436,12 @@ export default function MessagesPage() {
 					</div>
 				</div>
 			)}
-			<div
+			{/* <div
 				onClick={() => setFindUsersToChat(true)}
 				className="text-white w-12 h-12 flex-shrink-0 flex-none flex items-center justify-center rounded-full bg-primary hover:bg-primary-hover hover:text-black fixed bottom-24 left-[500px] cursor-pointer"
 			>
 				<Plus />
-			</div>
+			</div> */}
 
 			<Dialog open={findUsersToChat} onOpenChange={setFindUsersToChat}>
 				<DialogContent className="!rounded-3xl">
