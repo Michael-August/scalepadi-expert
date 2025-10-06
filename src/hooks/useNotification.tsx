@@ -9,7 +9,7 @@ export const useGetNotifications = () => {
 		queryFn: async () => {
 			try {
 				const response = await axiosClient.get(
-					`/notifications-business`
+					`/notifications-expert`
 				);
 				if (response.data?.status === false) {
 					throw new Error(
@@ -46,7 +46,7 @@ export const useMarkAsRead = () => {
 		mutationFn: async (data: { notifId: string }) => {
 			try {
 				const res = await axiosClient.put(
-					`/notification-business/${data.notifId}`
+					`/notification-expert/${data.notifId}`
 				);
 				if (res.data?.status === false) {
 					throw new Error(
