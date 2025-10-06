@@ -210,13 +210,9 @@ export const useCompleteProfileSetUp = () => {
   const { mutate: completeProfileSetup, isPending } = useMutation({
     mutationFn: async (data: any) => {
       try {
-        // Configure headers based on data type
         const config = {
           headers: {},
         };
-
-        // If data is FormData, let axios set the Content-Type automatically
-        // Otherwise, set application/json
         if (!(data instanceof FormData)) {
           config.headers = {
             "Content-Type": "application/json",
@@ -232,7 +228,6 @@ export const useCompleteProfileSetUp = () => {
         console.log(res.data);
         return res.data;
       } catch (error: any) {
-        // If backend sent a message, preserve it
         const backendMessage =
           error?.response?.data?.message ||
           error?.message ||

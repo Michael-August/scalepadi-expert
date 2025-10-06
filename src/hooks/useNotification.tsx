@@ -8,9 +8,13 @@ export const useGetNotifications = () => {
 		queryKey: ["Notifications"],
 		queryFn: async () => {
 			try {
+<<<<<<< HEAD
 				const response = await axiosClient.get(
 					`/notifications-expert`
 				);
+=======
+				const response = await axiosClient.get(`/notifications-expert`);
+>>>>>>> 105e8147db1dae06728c4f510774a4ded2d9b3f7
 				if (response.data?.status === false) {
 					throw new Error(
 						response.data?.message ||

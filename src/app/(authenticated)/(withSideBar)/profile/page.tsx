@@ -26,7 +26,7 @@ const Profile = () => {
   const [activeTab, setActiveTab] = useState<"about" | "portfolio" | "account">(
     "about"
   );
-  console.log(user)
+  console.log(user);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -421,14 +421,16 @@ const Profile = () => {
                       <span className="font-medium text-[20px] text-primary">
                         Identity
                       </span>
-                      <span 
-                        onClick={() => router.push(`/profile-setup?step=profiling`)}
+                      <span
+                        onClick={() =>
+                          router.push(`/profile-setup?step=profiling`)
+                        }
                         className="border border-[#E7E8E9] rounded-[10px] p-2 bg-white cursor-pointer text-[#0E1426] text-sm"
                       >
                         Update
                       </span>
                     </div>
-                    
+
                     {/* Identity Type and ID Image */}
                     <div className="flex flex-col gap-4">
                       <div className="flex flex-col gap-1">
@@ -436,13 +438,16 @@ const Profile = () => {
                           Identity Type
                         </span>
                         <span className="text-[#1A1A1A] text-base font-semibold">
-                          {user?.identification?.type ? 
-                            user.identification.type.replace(/([A-Z])/g, ' $1').replace(/^./, (str: string) => str.toUpperCase()) :
-                            'Not specified'
-                          }
+                          {user?.identification?.type
+                            ? user.identification.type
+                                .replace(/([A-Z])/g, " $1")
+                                .replace(/^./, (str: string) =>
+                                  str.toUpperCase()
+                                )
+                            : "Not specified"}
                         </span>
                       </div>
-                      
+
                       {/* ID Image Display */}
                       {user?.identification?.idImage && (
                         <div className="flex flex-col gap-2">
@@ -464,7 +469,7 @@ const Profile = () => {
                           </div>
                         </div>
                       )}
-                      
+
                       {!user?.identification?.idImage && (
                         <div className="flex flex-col gap-2">
                           <span className="text-[#878A93] text-sm font-normal">
@@ -472,7 +477,9 @@ const Profile = () => {
                           </span>
                           <div className="flex items-center justify-center p-8 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
                             <div className="text-center">
-                              <div className="text-gray-400 text-sm mb-2">No ID document uploaded</div>
+                              <div className="text-gray-400 text-sm mb-2">
+                                No ID document uploaded
+                              </div>
                               <div className="text-xs text-gray-500">
                                 Upload your ID document to get verified
                               </div>
