@@ -26,7 +26,7 @@ const Profile = () => {
   const [activeTab, setActiveTab] = useState<"about" | "portfolio" | "account">(
     "about"
   );
-  console.log(user);
+  // console.log(user);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -40,6 +40,7 @@ const Profile = () => {
 
       completeProfileSetup(formData, {
         onSuccess: (data) => {
+          // console.log(data);
           // Update local user state
           const updatedUser = {
             ...user,
@@ -49,11 +50,11 @@ const Profile = () => {
           localStorage.setItem("user", JSON.stringify(updatedUser));
           toast.success("Profile picture updated successfully");
         },
-        onError: (error: any) => {
-          toast.error(
-            error?.message || "An error occurred while updating profile picture"
-          );
-        },
+        // onError: (error: any) => {
+        //   toast.error(
+        //     error?.message || "An error occurred while updating profile picture"
+        //   );
+        // },
       });
     }
   };
@@ -81,11 +82,11 @@ const Profile = () => {
               <div className="flex items-center gap-2">
                 <div className="w-[70px] relative h-[70px] rounded-full">
                   <Image
-                    src={user?.profilePicture}
+                    src={user?.profilePicture || "/images/profile-pic.svg"}
                     alt="Profile Picture"
                     width={70}
                     height={70}
-                    className="rounded-full w-full h-full"
+                    className="rounded-full w-full h-full object-cover"
                   />
                   <Image
                     className="absolute bottom-0 left-0"
@@ -96,53 +97,76 @@ const Profile = () => {
                   />
                 </div>
                 <div className="flex flex-col gap-2">
-                  <span className="text-[#1A1A1A] font-medium text-[20px]">
-                    {user?.name}
+                  <span className="text-[#1A1A1A] font-medium text-[20px] capitalize">
+                    {user?.name || "No name provided"}
                   </span>
                   <div className="flex items-center gap-2">
-                    {user?.status === "active" && (
-                      <span className="flex items-center gap-[2px] font-medium text-[#878A93] text-sm">
+                    {user?.verified ? (
+                      <span className="flex items-center gap-[2px] font-medium text-green-600 text-sm">
                         <Verified className="w-4 h-4 fill-green-600 text-white" />{" "}
                         Verified
                       </span>
-                    )}
-                    {user?.status !== "active" && (
-                      <span className="flex items-center gap-[2px] font-medium text-[#878A93] text-sm">
+                    ) : (
+                      <span className="flex items-center gap-[2px] font-medium text-red-500 text-sm capitalize">
                         <X className="w-4 h-4 text-red-600" /> Unverified
                       </span>
                     )}
-                    <span className="flex items-center gap-[2px] font-medium text-[#878A93] text-sm">
-                      <Pin className="w-4 h-4 text-[#878A93]" /> {user?.state},
-                      {user?.country}
+                    <span className="flex items-center gap-[2px] font-medium text-[#878A93] text-sm capitalize">
+                      <Pin className="w-4 h-4 text-[#878A93]" />{" "}
+                      {user?.state || "N/A"}, {user?.country || "N/A"}
                     </span>
-                    <span className="flex items-center gap-[2px] font-medium text-[#878A93] text-sm">
+                    <span className="flex items-center gap-[2px] font-medium text-[#878A93] text-sm capitalize">
                       <Clock className="w-4 h-4 text-[#878A93]" /> Availability:{" "}
-                      {user?.availability?.split(",")?.map((avail: string) => (
-                        <span key={avail}>{avail}</span>
-                      ))}
+                      {user?.availability ? (
+                        user.availability
+                          .split(",")
+                          .map((avail: string, index: number) => (
+                            <span key={index}>{avail}</span>
+                          ))
+                      ) : (
+                        <span>Not specified</span>
+                      )}
                     </span>
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <div>
-                  <Edit2
-                    className="w-4 h-4 cursor-pointer"
-                    onClick={() => fileInputRef.current?.click()}
-                  />
+              <div className="flex items-center gap-3">
+                {/* Edit / Upload Button */}
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-[#F2F7FF] hover:bg-[#E8F1FF] transition-colors rounded-lg text-[#1E88E5] font-medium text-sm"
+                >
+                  <Edit2 className="w-4 h-4 text-[#1E88E5]" />
+                  Change Image
+                </button>
 
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleFileChange}
-                  />
-                </div>
-                <span className="text-[#1A1A1A] font-medium text-base">
-                  Change image
-                </span>
-                <Trash2Icon className="text-[#E33161] cursor-pointer w-4 h-4" />
+                {/* Hidden File Input */}
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+
+                {/* Delete / Reset Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setProfileImage(null);
+                    setUser({ ...user, profilePicture: null });
+                    localStorage.setItem(
+                      "user",
+                      JSON.stringify({ ...user, profilePicture: null })
+                    );
+                    toast.success("Profile image removed");
+                  }}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-[#FFF3F6] hover:bg-[#FFE8ED] transition-colors rounded-lg text-[#E33161] font-medium text-sm"
+                >
+                  <Trash2Icon className="w-4 h-4 text-[#E33161]" />
+                  Remove
+                </button>
               </div>
             </div>
 
@@ -192,7 +216,7 @@ const Profile = () => {
 
               {activeTab === "about" && (
                 <div className="flex flex-col gap-4">
-                  <div className="about flex flex-col rounded-[14px] bg-white border border-[#D1DAEC80] gap-3 p-4">
+                  <div className="about flex flex-col capitalize rounded-[14px] bg-white border border-[#D1DAEC80] gap-3 p-4">
                     <div className="flex items-center justify-between">
                       <span className="font-medium text-[20px] text-primary">
                         Bio
@@ -201,12 +225,14 @@ const Profile = () => {
                         onClick={() =>
                           router.push(`/profile-setup?step=profiling`)
                         }
-                        className="border border-[#E7E8E9] rounded-[10px] p-2 bg-white cursor-pointer text-[#0E1426] text-sm"
+                        className="border border-[#E7E8E9] hover:bg-yellow-400 hover:text-white rounded-[10px] p-2 bg-white cursor-pointer text-[#0E1426] text-sm"
                       >
                         Update
                       </span>
                     </div>
-                    <span className="text-[#353D44] text-sm">{user?.bio}</span>
+                    <span className="text-[#353D44] text-sm">
+                      {user?.bio || "No bio provided"}
+                    </span>
                   </div>
 
                   <div className="about flex flex-col rounded-[14px] bg-white border border-[#D1DAEC80] gap-3 p-4">
@@ -218,19 +244,19 @@ const Profile = () => {
                         onClick={() =>
                           router.push(`/profile-setup?step=about-you`)
                         }
-                        className="border border-[#E7E8E9] rounded-[10px] p-2 bg-white cursor-pointer text-[#0E1426] text-sm"
+                        className="border border-[#E7E8E9] hover:bg-yellow-400 hover:text-white rounded-[10px] p-2 bg-white cursor-pointer text-[#0E1426] text-sm"
                       >
                         Edit
                       </span>
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                      <div className="flex flex-col gap-1">
+                      <div className="flex flex-col gap-1 capitalize">
                         <span className="text-[#878A93] text-sm font-normal">
                           Full Name
                         </span>
                         <span className="text-[#1A1A1A] text-base font-semibold">
-                          {user?.name}
+                          {user?.name || "Not provided"}
                         </span>
                       </div>
                       <div className="flex flex-col gap-1">
@@ -238,15 +264,15 @@ const Profile = () => {
                           Email
                         </span>
                         <span className="text-[#1A1A1A] text-base font-semibold">
-                          {user?.email}
+                          {user?.email || "Not provided"}
                         </span>
                       </div>
-                      <div className="flex flex-col gap-1">
+                      <div className="flex flex-col gap-1 capitalize">
                         <span className="text-[#878A93] text-sm font-normal">
                           Gender
                         </span>
                         <span className="text-[#1A1A1A] text-base font-semibold">
-                          {user?.gender}
+                          {user?.gender || "Not specified"}
                         </span>
                       </div>
                       <div className="flex flex-col gap-1">
@@ -254,29 +280,29 @@ const Profile = () => {
                           Phone number
                         </span>
                         <span className="text-[#1A1A1A] text-base font-semibold">
-                          {user?.phone}
+                          {user?.phone || "Not provided"}
                         </span>
                       </div>
-                      <div className="flex flex-col gap-1">
+                      <div className="flex flex-col gap-1 capitalize">
                         <span className="text-[#878A93] text-sm font-normal">
                           Country of residence
                         </span>
                         <span className="text-[#1A1A1A] text-base font-semibold">
-                          {user?.country}
+                          {user?.country || "Not provided"}
                         </span>
                       </div>
-                      <div className="flex flex-col gap-1">
+                      <div className="flex flex-col gap-1 capitalize">
                         <span className="text-[#878A93] text-sm font-normal">
                           State of residence
                         </span>
                         <span className="text-[#1A1A1A] text-base font-semibold">
-                          {user?.state}
+                          {user?.state || "Not provided"}
                         </span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="about flex flex-col rounded-[14px] bg-white border border-[#D1DAEC80] gap-3 p-4">
+                  <div className="about flex flex-col capitalize rounded-[14px] bg-white border border-[#D1DAEC80] gap-3 p-4">
                     <div className="flex items-center justify-between">
                       <span className="font-medium text-[20px] text-primary">
                         Professional Details
@@ -287,7 +313,7 @@ const Profile = () => {
                             `/profile-setup?step=professional-experience`
                           )
                         }
-                        className="border border-[#E7E8E9] rounded-[10px] p-2 bg-white cursor-pointer text-[#0E1426] text-sm"
+                        className="border border-[#E7E8E9] hover:bg-yellow-400 hover:text-white rounded-[10px] p-2 bg-white cursor-pointer text-[#0E1426] text-sm"
                       >
                         Edit
                       </span>
@@ -298,7 +324,7 @@ const Profile = () => {
                           Years of experience
                         </span>
                         <span className="text-[#1A1A1A] text-base font-semibold">
-                          {user?.yearsOfExperience}
+                          {user?.yearsOfExperience || "Not specified"}
                         </span>
                       </div>
                       <div className="flex flex-col gap-1">
@@ -306,7 +332,7 @@ const Profile = () => {
                           Category
                         </span>
                         <span className="text-[#1A1A1A] text-base font-semibold">
-                          {user?.category}
+                          {user?.category || "Not specified"}
                         </span>
                       </div>
                       <div className="flex flex-col gap-1">
@@ -314,7 +340,7 @@ const Profile = () => {
                           Role
                         </span>
                         <span className="text-[#1A1A1A] text-base font-semibold">
-                          {user?.role[0]}
+                          {user?.role?.[0] || "Not specified"}
                         </span>
                       </div>
                     </div>
@@ -323,15 +349,21 @@ const Profile = () => {
                         Preferred industries
                       </span>
                       <div className="flex items-center gap-2 flex-wrap">
-                        {user?.preferredIndustry?.map(
-                          (industry: string, index: number) => (
-                            <span
-                              key={index}
-                              className="bg-[#F2F7FF] p-2 rounded-[14px] text-xs text-[#1E88E5]"
-                            >
-                              {industry}
-                            </span>
+                        {user?.preferredIndustry?.length > 0 ? (
+                          user.preferredIndustry.map(
+                            (industry: string, index: number) => (
+                              <span
+                                key={index}
+                                className="bg-[#F2F7FF] p-2 rounded-[14px] text-xs text-[#1E88E5]"
+                              >
+                                {industry}
+                              </span>
+                            )
                           )
+                        ) : (
+                          <span className="text-[#878A93] text-sm">
+                            No industries specified
+                          </span>
                         )}
                       </div>
                     </div>
@@ -340,14 +372,20 @@ const Profile = () => {
                         Skills
                       </span>
                       <div className="flex items-center gap-2 flex-wrap">
-                        {user?.skills?.map((skill: string, index: number) => (
-                          <span
-                            key={index}
-                            className="bg-[#F2F7FF] p-2 rounded-[14px] text-xs text-[#1E88E5]"
-                          >
-                            {skill}
+                        {user?.skills?.length > 0 ? (
+                          user.skills.map((skill: string, index: number) => (
+                            <span
+                              key={index}
+                              className="bg-[#F2F7FF] p-2 rounded-[14px] text-xs text-[#1E88E5]"
+                            >
+                              {skill}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-[#878A93] text-sm">
+                            No skills specified
                           </span>
-                        ))}
+                        )}
                       </div>
                     </div>
                   </div>
@@ -361,36 +399,43 @@ const Profile = () => {
                         onClick={() =>
                           router.push(`/profile-setup?step=profiling`)
                         }
-                        className="border border-[#E7E8E9] rounded-[10px] p-2 bg-white cursor-pointer text-[#0E1426] text-sm"
+                        className="border border-[#E7E8E9] hover:bg-yellow-400 hover:text-white rounded-[10px] p-2 bg-white cursor-pointer text-[#0E1426] text-sm"
                       >
                         Edit
                       </span>
                     </div>
 
                     <div className="flex items-center gap-1 flex-wrap justify-between">
-                      {Object.entries(user?.socialLinks || {}).map(
-                        ([key, value]: [string, unknown]) =>
-                          String(value) && (
-                            <Link
-                              href={String(value)}
-                              target="_blank"
-                              key={key}
-                              className="flex cursor-pointer flex-col gap-1"
-                            >
-                              <span className="font-medium text-sm text-[#878A93]">
-                                {key.charAt(0).toUpperCase() + key.slice(1)}
-                              </span>
-                              <span className="flex gap-2 border text-[#878A93] border-[#ABC6FB] bg-white rounded-[14px] p-[10px] items-center">
-                                <LinkIcon className="text-[#FFC371] w-4 h-4" />
-                                {String(value)}
-                              </span>
-                            </Link>
-                          )
+                      {user?.socialLinks &&
+                      Object.values(user.socialLinks).some((value) => value) ? (
+                        Object.entries(user.socialLinks || {}).map(
+                          ([key, value]: [string, unknown]) =>
+                            String(value) && (
+                              <Link
+                                href={String(value)}
+                                target="_blank"
+                                key={key}
+                                className="flex cursor-pointer flex-col gap-1"
+                              >
+                                <span className="font-medium text-sm text-[#878A93]">
+                                  {key.charAt(0).toUpperCase() + key.slice(1)}
+                                </span>
+                                <span className="flex gap-2 border text-[#878A93] border-[#ABC6FB] bg-white rounded-[14px] p-[10px] items-center">
+                                  <LinkIcon className="text-[#FFC371] w-4 h-4" />
+                                  {String(value)}
+                                </span>
+                              </Link>
+                            )
+                        )
+                      ) : (
+                        <span className="text-[#878A93] text-sm">
+                          No external links provided
+                        </span>
                       )}
                     </div>
                   </div>
 
-                  <div className="about flex flex-col rounded-[14px] bg-white border border-[#D1DAEC80] gap-3 p-4">
+                  {/* <div className="about flex flex-col rounded-[14px] bg-white border border-[#D1DAEC80] gap-3 p-4">
                     <div className="flex items-center justify-between">
                       <span className="font-medium text-[20px] text-primary">
                         Settings
@@ -399,7 +444,7 @@ const Profile = () => {
                         Edit
                       </span>
                     </div>
-                  </div>
+                  </div> */}
                 </div>
               )}
 

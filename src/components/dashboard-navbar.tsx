@@ -33,7 +33,7 @@ const DashboardNav = ({
   const [allNotifications, setNotifications] = useState<INotification[] | null>(
     notifications?.data?.notifications
   );
-   const [user, setUser] = useState<any>();
+  const [user, setUser] = useState<any>();
   const [open, setOpen] = useState(false);
   const router = useRouter();
   const { logout, isPending } = useLogout();
@@ -44,8 +44,8 @@ const DashboardNav = ({
         .map((n: any) => n[0])
         .join("")
         .toUpperCase()
-    : "?";
-  console.log(user);
+    : "U";
+  // console.log(user);
 
   const { markAsRead } = useMarkAsRead();
 
@@ -85,7 +85,7 @@ const DashboardNav = ({
     return () => {
       socket.disconnect();
     };
-  }, []);
+  }, [allNotifications]);
 
   useEffect(() => {
     setUnreadNotif(
@@ -96,7 +96,7 @@ const DashboardNav = ({
     setNotifications(notifications?.notifications);
   }, [notifications]);
 
-    const handleLogOut = () => {
+  const handleLogOut = () => {
     logout(undefined, {
       onSuccess: () => {
         toast.success("Logout Successful");
@@ -190,7 +190,7 @@ const DashboardNav = ({
           </SheetContent>
         </Sheet>
 
-<div className="relative">
+        <div className="relative">
           {/* Avatar */}
           <button
             onClick={() => setOpen(!open)}
@@ -200,8 +200,8 @@ const DashboardNav = ({
               <Image
                 src={user.profilePicture}
                 alt={user.name}
-				width={38}
-				height={38}
+                width={38}
+                height={38}
                 className="w-[38px] h-[38px] rounded-full object-cover"
               />
             ) : (
@@ -230,7 +230,7 @@ const DashboardNav = ({
             </div>
           )}
         </div>
-</div>
+      </div>
     </nav>
   );
 };

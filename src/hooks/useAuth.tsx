@@ -15,7 +15,19 @@ export const useSignUp = () => {
         }
         return res.data;
       } catch (error: any) {
-        throw new Error(error) || new Error("An error occurred during sign up");
+        if (error instanceof AxiosError) {
+          toast.error(
+            error.response?.data?.message || "Failed to register expert."
+          );
+        } else if (error instanceof Error) {
+          toast.error(error.message);
+        } else {
+          toast.error(
+            "An unexpected error occured while registering expert."
+          );
+        }
+
+        throw error;
       }
     },
   });
@@ -34,13 +46,13 @@ export const useLogin = () => {
           );
         }
         return res.data;
-      } catch (error: any) {
+       } catch (error: any) {
         if (error instanceof AxiosError) {
-          toast.error(error.response?.data?.message || `Failed to log in`);
+          toast.error(error.response?.data?.message || "Failed to login.");
         } else if (error instanceof Error) {
           toast.error(error.message);
         } else {
-          toast.error(`An unexpected error occured while trying to log in`);
+          toast.error("An unexpected error occured while logging in.");
         }
 
         throw error;
@@ -63,10 +75,17 @@ export const useVerifyEmail = () => {
         }
         return res.data;
       } catch (error: any) {
-        throw (
-          new Error(error) ||
-          new Error("An error occurred during email verification")
-        );
+        if (error instanceof AxiosError) {
+          toast.error(
+            error.response?.data?.message || "Failed to verify email."
+          );
+        } else if (error instanceof Error) {
+          toast.error(error.message);
+        } else {
+          toast.error("An unexpected error occured while verifying email.");
+        }
+
+        throw error;
       }
     },
   });
@@ -85,14 +104,19 @@ export const useResendVerificationCode = () => {
           );
         }
         return res.data;
-      } catch (error: any) {
-        // If backend sent a message, preserve it
-        const backendMessage =
-          error?.response?.data?.message ||
-          error?.message ||
-          "An error occurred during login";
+     } catch (error: any) {
+        if (error instanceof AxiosError) {
+          toast.error(
+            error.response?.data?.message ||
+              "Failed to resend verification code."
+          );
+        } else if (error instanceof Error) {
+          toast.error(error.message);
+        } else {
+          toast.error("An unexpected error occured while resending code.");
+        }
 
-        throw new Error(backendMessage);
+        throw error;
       }
     },
   });
@@ -112,11 +136,18 @@ export const useSetexpertDetails = () => {
           );
         }
         return res.data;
-      } catch (error: any) {
-        throw (
-          new Error(error) ||
-          new Error("An error occurred while setting expert details")
-        );
+       } catch (error: any) {
+        if (error instanceof AxiosError) {
+          toast.error(
+            error.response?.data?.message || "Failed to set expert details."
+          );
+        } else if (error instanceof Error) {
+          toast.error(error.message);
+        } else {
+          toast.error("An unexpected error occured while setting expert.");
+        }
+
+        throw error;
       }
     },
   });
@@ -137,10 +168,17 @@ export const useForgotPassword = () => {
         }
         return res.data;
       } catch (error: any) {
-        throw (
-          new Error(error) ||
-          new Error("An error occurred during password reset request")
-        );
+        if (error instanceof AxiosError) {
+          toast.error(
+            error.response?.data?.message || "Failed to reset request."
+          );
+        } else if (error instanceof Error) {
+          toast.error(error.message);
+        } else {
+          toast.error("An unexpected error occured while reseting request.");
+        }
+
+        throw error;
       }
     },
   });
@@ -164,10 +202,17 @@ export const useResetPassword = () => {
         }
         return res.data;
       } catch (error: any) {
-        throw (
-          new Error(error) ||
-          new Error("An error occurred during password reset")
-        );
+        if (error instanceof AxiosError) {
+          toast.error(
+            error.response?.data?.message || "Failed to reset password."
+          );
+        } else if (error instanceof Error) {
+          toast.error(error.message);
+        } else {
+          toast.error("An unexpected error occured while reseting password.");
+        }
+
+        throw error;
       }
     },
   });
@@ -184,17 +229,17 @@ export const useGetExpertByToken = () => {
         if (response.data?.status === false) {
           throw new Error(response.data?.message || "Failed to fetch expert");
         }
-        console.log(response.data)
+        // console.log(response.data)
         return response.data;
       } catch (error: any) {
         if (error instanceof AxiosError) {
           toast.error(
-            error.response?.data?.message || "Failed to fetch expert"
+            error.response?.data?.message || "Failed to fetch expert."
           );
         } else if (error instanceof Error) {
           toast.error(error.message);
         } else {
-          toast.error("An unexpected error occured while fetching expert");
+          toast.error("An unexpected error occured while fetching expert.");
         }
 
         throw error;
@@ -227,13 +272,18 @@ export const useCompleteProfileSetUp = () => {
         }
         console.log(res.data);
         return res.data;
-      } catch (error: any) {
-        const backendMessage =
-          error?.response?.data?.message ||
-          error?.message ||
-          "An error occurred during profile update";
+       } catch (error: any) {
+        if (error instanceof AxiosError) {
+          toast.error(
+            error.response?.data?.message || "Failed to update profile."
+          );
+        } else if (error instanceof Error) {
+          toast.error(error.message);
+        } else {
+          toast.error("An unexpected error occured while updating profile.");
+        }
 
-        throw new Error(backendMessage);
+        throw error;
       }
     },
     onSuccess: () => {
@@ -257,7 +307,17 @@ export const useLogout = () => {
         }
         return res.data;
       } catch (error: any) {
-        throw new Error(error) || new Error("An error occurred during logout");
+        if (error instanceof AxiosError) {
+          toast.error(
+            error.response?.data?.message || "Failed to logout expert."
+          );
+        } else if (error instanceof Error) {
+          toast.error(error.message);
+        } else {
+          toast.error("An unexpected error occured while logging out.");
+        }
+
+        throw error;
       }
     },
   });
