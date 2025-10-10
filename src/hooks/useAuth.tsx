@@ -128,7 +128,17 @@ export const useSetexpertDetails = () => {
   const { mutate: setexpertDetails, isPending } = useMutation({
     mutationFn: async (data: any) => {
       try {
-        const res = await axiosClient.post("/profile/expert", data);
+        // Handle FormData for file uploads
+        const config = {
+          headers: {},
+        };
+        
+        if (!(data instanceof FormData)) {
+          config.headers = {
+            "Content-Type": "application/json",
+          };
+        }
+        const res = await axiosClient.post("/profile/expert", data, config);
         if (res.data?.status === false) {
           throw new Error(
             res.data?.message ||
@@ -154,6 +164,128 @@ export const useSetexpertDetails = () => {
 
   return { setexpertDetails, isPending };
 };
+
+export const useCompleteProfileSetUp = () => {
+  const queryClient = useQueryClient();
+  const { mutate: completeProfileSetup, isPending } = useMutation({
+    mutationFn: async (data: any) => {
+      try {
+        const config = {
+          headers: {},
+        };
+        
+        if (!(data instanceof FormData)) {
+          config.headers = {
+            "Content-Type": "application/json",
+          };
+        }
+
+        const res = await axiosClient.put("/profile/expert", data, config);
+        if (res.data?.status === false) {
+          throw new Error(
+            res.data?.message || "An error occurred during profile update"
+          );
+        }
+        console.log(res.data);
+        return res.data;
+       } catch (error: any) {
+        if (error instanceof AxiosError) {
+          toast.error(
+            error.response?.data?.message || "Failed to update profile."
+          );
+        } else if (error instanceof Error) {
+          toast.error(error.message);
+        } else {
+          toast.error("An unexpected error occured while updating profile.");
+        }
+
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      toast.success("Profile updated successfully");
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+    },
+  });
+
+  return { completeProfileSetup, isPending };
+};
+
+// export const useSetexpertDetails = () => {
+//   const { mutate: setexpertDetails, isPending } = useMutation({
+//     mutationFn: async (data: any) => {
+//       try {
+//         const res = await axiosClient.post("/profile/expert", data);
+//         if (res.data?.status === false) {
+//           throw new Error(
+//             res.data?.message ||
+//               "An error occurred while setting expert details"
+//           );
+//         }
+//         return res.data;
+//        } catch (error: any) {
+//         if (error instanceof AxiosError) {
+//           toast.error(
+//             error.response?.data?.message || "Failed to set expert details."
+//           );
+//         } else if (error instanceof Error) {
+//           toast.error(error.message);
+//         } else {
+//           toast.error("An unexpected error occured while setting expert.");
+//         }
+
+//         throw error;
+//       }
+//     },
+//   });
+
+//   return { setexpertDetails, isPending };
+// };
+
+// export const useCompleteProfileSetUp = () => {
+//   const queryClient = useQueryClient();
+//   const { mutate: completeProfileSetup, isPending } = useMutation({
+//     mutationFn: async (data: any) => {
+//       try {
+//         const config = {
+//           headers: {},
+//         };
+//         if (!(data instanceof FormData)) {
+//           config.headers = {
+//             "Content-Type": "application/json",
+//           };
+//         }
+
+//         const res = await axiosClient.put("/profile/expert", data, config);
+//         if (res.data?.status === false) {
+//           throw new Error(
+//             res.data?.message || "An error occurred during profile update"
+//           );
+//         }
+//         console.log(res.data);
+//         return res.data;
+//        } catch (error: any) {
+//         if (error instanceof AxiosError) {
+//           toast.error(
+//             error.response?.data?.message || "Failed to update profile."
+//           );
+//         } else if (error instanceof Error) {
+//           toast.error(error.message);
+//         } else {
+//           toast.error("An unexpected error occured while updating profile.");
+//         }
+
+//         throw error;
+//       }
+//     },
+//     onSuccess: () => {
+//       toast.success("Profile updated successfully");
+//       queryClient.invalidateQueries({ queryKey: ["profile"] });
+//     },
+//   });
+
+//   return { completeProfileSetup, isPending };
+// };
 
 export const useForgotPassword = () => {
   const { mutate: forgotPassword, isPending } = useMutation({
@@ -248,51 +380,6 @@ export const useGetExpertByToken = () => {
   });
 
   return { expert: data, isLoading };
-};
-
-export const useCompleteProfileSetUp = () => {
-  const queryClient = useQueryClient();
-  const { mutate: completeProfileSetup, isPending } = useMutation({
-    mutationFn: async (data: any) => {
-      try {
-        const config = {
-          headers: {},
-        };
-        if (!(data instanceof FormData)) {
-          config.headers = {
-            "Content-Type": "application/json",
-          };
-        }
-
-        const res = await axiosClient.put("/profile/expert", data, config);
-        if (res.data?.status === false) {
-          throw new Error(
-            res.data?.message || "An error occurred during profile update"
-          );
-        }
-        console.log(res.data);
-        return res.data;
-       } catch (error: any) {
-        if (error instanceof AxiosError) {
-          toast.error(
-            error.response?.data?.message || "Failed to update profile."
-          );
-        } else if (error instanceof Error) {
-          toast.error(error.message);
-        } else {
-          toast.error("An unexpected error occured while updating profile.");
-        }
-
-        throw error;
-      }
-    },
-    onSuccess: () => {
-      toast.success("Profile updated successfully");
-      queryClient.invalidateQueries({ queryKey: ["profile"] });
-    },
-  });
-
-  return { completeProfileSetup, isPending };
 };
 
 export const useLogout = () => {

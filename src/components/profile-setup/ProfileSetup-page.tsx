@@ -62,78 +62,178 @@ const ProfileSetUp = () => {
   const onNext = () => setCurrentStep((prev) => prev + 1);
   const onBack = () => setCurrentStep((prev) => prev - 1);
 
-  const onSubmitFinal = (data: any) => {
-    let stepRate = 0;
-    if (currentStep === 0) stepRate = 30;
-    if (currentStep === 1) stepRate = 70;
-    if (currentStep === 2) stepRate = 100; // Updated percentages
+  // In your ProfileSetUp component, update the onSubmitFinal function:
+const onSubmitFinal = (data: any) => {
+  let stepRate = 0;
+  if (currentStep === 0) stepRate = 30;
+  if (currentStep === 1) stepRate = 70;
+  if (currentStep === 2) stepRate = 100;
 
-    let completionRate =
-      user?.regPercentage && user.regPercentage >= stepRate
-        ? user.regPercentage
-        : stepRate;
+  let completionRate =
+    user?.regPercentage && user.regPercentage >= stepRate
+      ? user.regPercentage
+      : stepRate;
 
-    if (currentStep === 0) {
-      completeProfileSetup(
-        { ...data, regPercentage: completionRate },
-        {
-          onSuccess: () => {
-            if (stepParam) {
-              router.push("/profile");
-            } else {
-              onNext();
-            }
-          },
-        }
-      );
-    }
-
-    if (currentStep === 1) {
-      const payload = {
-        ...data,
-        socialLinks: {
-          linkedin: data.linkedin,
-          website: data.portfolio,
-        },
-      };
-      completeProfileSetup(
-        { ...payload, regPercentage: completionRate },
-        {
-          onSuccess: () => {
-             if (stepParam) {
-              router.push("/profile");
-            } else {
-              onNext();
-            }
-          },
-        }
-      );
-    }
-
-    if (currentStep === 2) {
-      const formData = new FormData();
-      Object.keys(data).forEach((key) => {
-        if (key === "identification" || key === "resume") {
-          if (data[key]) {
-            formData.append(key === "identification" ? "idImage" : "resume", data[key]);
-          }
-        } else {
-          formData.append(key, data[key]);
-        }
-      });
-      formData.append("regPercentage", String(completionRate));
-
-      completeProfileSetup(formData, {
+  if (currentStep === 0) {
+    completeProfileSetup(
+      { ...data, regPercentage: completionRate },
+      {
         onSuccess: () => {
           if (stepParam) {
             router.push("/profile");
           } else {
-            router.push("/projects");
+            onNext();
           }
         },
-      });
+      }
+    );
+  }
+
+  if (currentStep === 1) {
+    const payload = {
+      ...data,
+      socialLinks: {
+        linkedin: data.linkedin,
+        website: data.portfolio,
+      },
+    };
+    completeProfileSetup(
+      { ...payload, regPercentage: completionRate },
+      {
+        onSuccess: () => {
+           if (stepParam) {
+            router.push("/profile");
+          } else {
+            onNext();
+          }
+        },
+      }
+    );
+  }
+
+  if (currentStep === 2) {
+    const formData = new FormData();
+    
+    // Append all fields to FormData
+    Object.keys(data).forEach((key) => {
+      if (key === "identification" || key === "resume") {
+        // Handle file uploads
+        if (data[key]) {
+          const fileFieldName = key === "identification" ? "idImage" : "resume";
+          formData.append(fileFieldName, data[key]);
+        }
+      } else if (key === "role" || key === "preferredIndustry" || key === "skills") {
+        // Handle arrays
+        if (Array.isArray(data[key])) {
+          data[key].forEach((item: string, index: number) => {
+            formData.append(`${key}[${index}]`, item);
+          });
+        }
+      } else if (key === "socialLinks") {
+        // Skip socialLinks as we're handling linkedin and portfolio separately
+        return;
+      } else {
+        // Handle regular fields
+        if (data[key] !== null && data[key] !== undefined) {
+          formData.append(key, data[key]);
+        }
+      }
+    });
+
+    // Add social links if they exist
+    if (data.linkedin) {
+      formData.append("socialLinks[linkedin]", data.linkedin);
     }
-  };
+    if (data.portfolio) {
+      formData.append("socialLinks[website]", data.portfolio);
+    }
+
+    formData.append("regPercentage", String(completionRate));
+
+    completeProfileSetup(formData, {
+      onSuccess: () => {
+        if (stepParam) {
+          router.push("/profile");
+        } else {
+          router.push("/projects");
+        }
+      },
+    });
+  }
+};
+
+  // const onSubmitFinal = (data: any) => {
+  //   let stepRate = 0;
+  //   if (currentStep === 0) stepRate = 30;
+  //   if (currentStep === 1) stepRate = 70;
+  //   if (currentStep === 2) stepRate = 100; // Updated percentages
+
+  //   let completionRate =
+  //     user?.regPercentage && user.regPercentage >= stepRate
+  //       ? user.regPercentage
+  //       : stepRate;
+
+  //   if (currentStep === 0) {
+  //     completeProfileSetup(
+  //       { ...data, regPercentage: completionRate },
+  //       {
+  //         onSuccess: () => {
+  //           if (stepParam) {
+  //             router.push("/profile");
+  //           } else {
+  //             onNext();
+  //           }
+  //         },
+  //       }
+  //     );
+  //   }
+
+  //   if (currentStep === 1) {
+  //     const payload = {
+  //       ...data,
+  //       socialLinks: {
+  //         linkedin: data.linkedin,
+  //         website: data.portfolio,
+  //       },
+  //     };
+  //     completeProfileSetup(
+  //       { ...payload, regPercentage: completionRate },
+  //       {
+  //         onSuccess: () => {
+  //            if (stepParam) {
+  //             router.push("/profile");
+  //           } else {
+  //             onNext();
+  //           }
+  //         },
+  //       }
+  //     );
+  //   }
+
+  //   if (currentStep === 2) {
+  //     const formData = new FormData();
+  //     Object.keys(data).forEach((key) => {
+  //       if (key === "identification" || key === "resume") {
+  //         if (data[key]) {
+  //           formData.append(key === "identification" ? "idImage" : "resume", data[key]);
+  //         }
+  //       } else {
+  //         formData.append(key, data[key]);
+  //       }
+  //     });
+  //     formData.append("regPercentage", String(completionRate));
+
+  //     completeProfileSetup(formData, {
+  //       onSuccess: () => {
+  //         if (stepParam) {
+  //           router.push("/profile");
+  //         } else {
+  //           router.push("/projects");
+  //         }
+  //       },
+  //     });
+  //   }
+  // };
 
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user") || "{}");

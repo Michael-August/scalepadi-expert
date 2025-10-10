@@ -1,7 +1,7 @@
 import { Controller, useFormContext } from "react-hook-form";
 import MultiSelectField from "../multiselectfield";
 import { Textarea } from "../ui/textarea";
-import { Upload, FileText } from "lucide-react";
+import { Upload, FileText, X } from "lucide-react";
 import { Input } from "../ui/input";
 import {
   Select,
@@ -39,8 +39,9 @@ const Profiling = ({
     formState: { errors },
     watch,
     control,
-    setValue, // Add setValue from useFormContext
-  } = useFormContext(); // This is the correct way to get form methods
+    setValue,
+    trigger,
+  } = useFormContext();
 
   const availabilityOptions = Object.values(Availability).map((value) => ({
     label: value.replace("-", " ").replace(/\b\w/g, (c) => c.toUpperCase()),
@@ -57,6 +58,7 @@ const Profiling = ({
 
   const identificationFile = watch("identification");
   const identityType = watch("identityType");
+  const resumeValue = watch("resume");
 
   // Handle ID file changes
   useEffect(() => {
@@ -72,12 +74,14 @@ const Profiling = ({
         if (sizeInMB > 5) {
           setIdFileError("File size exceeds 5MB. Please upload a smaller image.");
           setIdPreview(null);
+          setValue("identification", null);
           return;
         }
 
         if (!file.type.startsWith('image/')) {
           setIdFileError("Please upload an image file (JPEG, PNG)");
           setIdPreview(null);
+          setValue("identification", null);
           return;
         }
 
@@ -92,7 +96,7 @@ const Profiling = ({
       setIdFileSize(null);
       setIdFileError(null);
     }
-  }, [identificationFile]);
+  }, [identificationFile, setValue]);
 
   // Handle resume file changes
   const handleResumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -112,20 +116,47 @@ const Profiling = ({
       if (!allowedTypes.includes(file.type)) {
         setResumeFileError("Please upload a PDF, DOC, DOCX, or TXT file");
         setResumeFile(null);
+        setValue("resume", null);
         return;
       }
 
       if (sizeInMB > 10) {
         setResumeFileError("File size exceeds 10MB. Please upload a smaller file.");
         setResumeFile(null);
+        setValue("resume", null);
         return;
       }
 
       setResumeFileError(null);
       setResumeFile(file);
-      
-      // Use setValue from useFormContext instead of methods.setValue
       setValue("resume", file);
+      trigger("resume");
+    }
+  };
+
+  const removeResume = () => {
+    setResumeFile(null);
+    setResumeFileSize(null);
+    setResumeFileError(null);
+    setValue("resume", null);
+    
+    // Clear the file input
+    const fileInput = document.getElementById('resume') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  };
+
+  const removeIdFile = () => {
+    setIdPreview(null);
+    setIdFileSize(null);
+    setIdFileError(null);
+    setValue("identification", null);
+    
+    // Clear the file input
+    const fileInput = document.getElementById('idcard') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
     }
   };
 
@@ -215,9 +246,22 @@ const Profiling = ({
                 />
                 
                 {resumeFile && (
-                  <div className="flex items-center gap-2 text-sm text-green-600">
-                    <FileText className="w-4 h-4" />
-                    <span>Resume ready for upload ({resumeFileSize?.toFixed(2)} MB)</span>
+                  <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
+                    <div className="flex items-center gap-2 text-sm text-green-700">
+                      <FileText className="w-4 h-4" />
+                      <span>
+                        Resume ready for upload ({resumeFileSize?.toFixed(2)} MB)
+                      </span>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={removeResume}
+                      className="h-8 w-8 p-0 hover:bg-red-50"
+                    >
+                      <X className="w-4 h-4 text-red-500" />
+                    </Button>
                   </div>
                 )}
                 
@@ -319,9 +363,20 @@ const Profiling = ({
               {idPreview && !idFileError && (
                 <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
                   <div className="flex flex-col items-center gap-3">
-                    <p className="text-sm font-medium text-gray-700">
-                      ID Document Preview
-                    </p>
+                    <div className="flex items-center justify-between w-full">
+                      <p className="text-sm font-medium text-gray-700">
+                        ID Document Preview
+                      </p>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={removeIdFile}
+                        className="h-8 w-8 p-0 hover:bg-red-50"
+                      >
+                        <X className="w-4 h-4 text-red-500" />
+                      </Button>
+                    </div>
                     <Image
                       src={idPreview}
                       alt="ID Preview"

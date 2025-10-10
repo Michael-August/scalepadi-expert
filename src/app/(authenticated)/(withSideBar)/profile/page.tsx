@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  useAccountDetailsUpload,
+  useGetAccountDetails,
+  useUpdateAccountDetails,
+} from "@/hooks/useAccount";
 import { useCompleteProfileSetUp } from "@/hooks/useAuth";
 import {
   Clock,
@@ -16,22 +21,43 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import dynamic from 'next/dynamic';
+
+// Dynamically import react-pdf components with no SSR
+const PDFViewer = dynamic(() => import('./PDFViewer'), {
+  ssr: false,
+  loading: () => <div className="flex justify-center items-center py-12">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+    <span className="ml-3 text-gray-600">Loading PDF viewer...</span>
+  </div>
+});
 
 const Profile = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
-  const { completeProfileSetup, isPending } = useCompleteProfileSetUp();
+  const { completeProfileSetup, isPending: isProfilePending } =
+    useCompleteProfileSetUp();
   const [activeTab, setActiveTab] = useState<"about" | "portfolio" | "account">(
     "about"
   );
+  const [showResumePdfPreview, setShowResumePdfPreview] = useState(false);
+  const [showIdPdfPreview, setShowIdPdfPreview] = useState(false);
 
-  // Add state for account details editing
+  const { accountDetailsUpload, isPending: isUploadPending } =
+    useAccountDetailsUpload();
+  const { data: accountDetails, isLoading: isAccountLoading } =
+    useGetAccountDetails();
+  const { updateAccountDetails, isPending: isUpdatePending } =
+    useUpdateAccountDetails();
+
   const [isEditingAccount, setIsEditingAccount] = useState(false);
-  const [accountDetails, setAccountDetails] = useState({
+  const [accountFormData, setAccountFormData] = useState({
     bankName: "",
     accountNumber: "",
     accountName: "",
+    branch: "",
+    sortCode: "",
   });
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -62,33 +88,66 @@ const Profile = () => {
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
     setUser(storedUser);
-    // Initialize account details from user data
-    setAccountDetails({
-      bankName: storedUser?.bankDetails?.bankName || "",
-      accountNumber: storedUser?.bankDetails?.accountNumber || "",
-      accountName: storedUser?.bankDetails?.accountName || "",
-    });
   }, []);
 
+  useEffect(() => {
+    if (accountDetails) {
+      setAccountFormData({
+        bankName: accountDetails?.bankName || "",
+        accountNumber: accountDetails?.accountNumber || "",
+        accountName: accountDetails?.accountName || "",
+        branch: accountDetails?.branch || "",
+        sortCode: accountDetails?.sortCode || "",
+      });
+    }
+  }, [accountDetails]);
+
   const handleAccountDetailsSave = () => {
-    completeProfileSetup(
-      {
-        bankDetails: accountDetails,
-        regPercentage: user?.regPercentage || 100,
-      },
-      {
-        onSuccess: (data) => {
+    const hasExistingAccount =
+      accountDetails &&
+      (accountDetails.bankName ||
+        accountDetails.accountNumber ||
+        accountDetails.accountName);
+
+    const accountId = accountDetails?.id || user?.expertId;
+
+    if (hasExistingAccount && accountId) {
+      // Update existing account details
+      updateAccountDetails(
+        { accountId, data: accountFormData },
+        {
+          onSuccess: () => {
+            const updatedUser = {
+              ...user,
+              bankDetails: accountFormData,
+            };
+            setUser(updatedUser);
+            localStorage.setItem("user", JSON.stringify(updatedUser));
+            setIsEditingAccount(false);
+            toast.success("Account details updated successfully");
+          },
+          onError: (error: Error) => {
+            console.error("Failed to update account details:", error);
+          },
+        }
+      );
+    } else {
+      accountDetailsUpload(accountFormData, {
+        onSuccess: () => {
           const updatedUser = {
             ...user,
-            bankDetails: accountDetails,
+            bankDetails: accountFormData,
           };
           setUser(updatedUser);
           localStorage.setItem("user", JSON.stringify(updatedUser));
           setIsEditingAccount(false);
-          // toast.success("Account details updated successfully");
+          toast.success("Account details saved successfully");
         },
-      }
-    );
+        onError: (error: Error) => {
+          console.error("Failed to upload account details:", error);
+        },
+      });
+    }
   };
 
   // Add loading state
@@ -101,6 +160,8 @@ const Profile = () => {
       </div>
     );
   }
+
+  const isAccountPending = isUploadPending || isUpdatePending;
 
   return (
     <div className="w-full flex flex-col gap-4 lg:w-[919px]">
@@ -243,6 +304,7 @@ const Profile = () => {
 
               {activeTab === "about" && (
                 <div className="flex flex-col gap-4">
+                  {/* About section remains the same */}
                   <div className="about flex flex-col capitalize rounded-[14px] bg-white border border-[#D1DAEC80] gap-3 p-4">
                     <div className="flex items-center justify-between">
                       <span className="font-medium text-[20px] text-primary">
@@ -328,8 +390,6 @@ const Profile = () => {
                       </div>
                     </div>
                   </div>
-
-                  {/* Add other about sections here */}
                 </div>
               )}
 
@@ -354,24 +414,48 @@ const Profile = () => {
                     {/* Resume Display */}
                     <div className="flex flex-col gap-4">
                       {user?.resume ? (
-                        <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
-                          <FileText className="w-8 h-8 text-green-600" />
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-green-800">
-                              Resume Uploaded
-                            </p>
-                            <p className="text-xs text-green-600">
-                              Click update to change your resume
-                            </p>
+                        <div className="flex flex-col gap-3">
+                          <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
+                            <FileText className="w-8 h-8 text-green-600" />
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-green-800">
+                                Resume Uploaded
+                              </p>
+                              <p className="text-xs text-green-600">
+                                Click update to change your resume
+                              </p>
+                            </div>
+                            <div className="flex gap-2">
+                              <a
+                                href={user.resume}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="px-3 py-1 bg-primary text-white rounded text-sm transition-colors"
+                              >
+                                Download
+                              </a>
+                              <button
+                                onClick={() =>
+                                  setShowResumePdfPreview(!showResumePdfPreview)
+                                }
+                                className="px-3 py-1 bg-gray-600 text-white rounded text-sm transition-colors"
+                              >
+                                {showResumePdfPreview
+                                  ? "Hide Preview"
+                                  : "Preview"}
+                              </button>
+                            </div>
                           </div>
-                          <a
-                            href={user.resume}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors"
-                          >
-                            View
-                          </a>
+
+                          {/* PDF Preview */}
+                          {showResumePdfPreview && (
+                            <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                              <PDFViewer 
+                                fileUrl={user.resume}
+                                type="resume"
+                              />
+                            </div>
+                          )}
                         </div>
                       ) : (
                         <div className="flex items-center gap-3 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
@@ -422,24 +506,62 @@ const Profile = () => {
                         </span>
                       </div>
 
-                      {/* ID Image Display */}
+                      {/* ID Document Display */}
                       {user?.identification?.idImage && (
-                        <div className="flex flex-col gap-2">
+                        <div className="flex flex-col gap-3">
                           <span className="text-[#878A93] text-sm font-normal">
                             ID Document
                           </span>
-                          <div className="relative w-40">
-                            {" "}
-                            {/* Reduced container width */}
-                            <Image
-                              src={user.identification.idImage}
-                              alt="ID Document"
-                              width={160}
-                              height={100}
-                              className="w-full h-auto rounded-md border border-gray-200 object-cover"
-                              unoptimized
-                            />
-                          </div>
+
+                          {/* Check if file is PDF */}
+                          {user.identification.idImage
+                            .toLowerCase()
+                            .endsWith(".pdf") ? (
+                            <div className="flex flex-col gap-3">
+                              <div className="flex gap-2">
+                                <a
+                                  href={user.identification.idImage}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors"
+                                >
+                                  Download PDF
+                                </a>
+                                <button
+                                  onClick={() =>
+                                    setShowIdPdfPreview(!showIdPdfPreview)
+                                  }
+                                  className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors"
+                                >
+                                  {showIdPdfPreview
+                                    ? "Hide Preview"
+                                    : "Preview PDF"}
+                                </button>
+                              </div>
+
+                              {/* PDF Preview for ID Document */}
+                              {showIdPdfPreview && (
+                                <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                                  <PDFViewer 
+                                    fileUrl={user.identification.idImage}
+                                    type="id"
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            // Show image for non-PDF files
+                            <div className="relative w-40">
+                              <Image
+                                src={user.identification.idImage}
+                                alt="ID Document"
+                                width={160}
+                                height={100}
+                                className="w-full h-auto rounded-md border border-gray-200 object-cover"
+                                unoptimized
+                              />
+                            </div>
+                          )}
                         </div>
                       )}
 
@@ -467,6 +589,7 @@ const Profile = () => {
 
               {activeTab === "account" && (
                 <div className="flex flex-col gap-4">
+                  {/* Account section remains the same */}
                   <div className="about flex flex-col rounded-[14px] bg-white border border-[#D1DAEC80] gap-3 p-4">
                     <div className="flex items-center justify-between">
                       <span className="font-medium text-[20px] text-primary">
@@ -488,7 +611,9 @@ const Profile = () => {
                             Bank Name
                           </span>
                           <span className="text-[#1A1A1A] text-base font-semibold">
-                            {user?.bankDetails?.bankName || "Not provided"}
+                            {accountDetails?.bankName ||
+                              user?.bankDetails?.bankName ||
+                              "Not provided"}
                           </span>
                         </div>
                         <div className="flex flex-col gap-1">
@@ -496,7 +621,9 @@ const Profile = () => {
                             Account Number
                           </span>
                           <span className="text-[#1A1A1A] text-base font-semibold">
-                            {user?.bankDetails?.accountNumber || "Not provided"}
+                            {accountDetails?.accountNumber ||
+                              user?.bankDetails?.accountNumber ||
+                              "Not provided"}
                           </span>
                         </div>
                         <div className="flex flex-col gap-1">
@@ -504,7 +631,29 @@ const Profile = () => {
                             Account Name
                           </span>
                           <span className="text-[#1A1A1A] text-base font-semibold">
-                            {user?.bankDetails?.accountName || "Not provided"}
+                            {accountDetails?.accountName ||
+                              user?.bankDetails?.accountName ||
+                              "Not provided"}
+                          </span>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[#878A93] text-sm font-normal">
+                            Branch
+                          </span>
+                          <span className="text-[#1A1A1A] text-base font-semibold">
+                            {accountDetails?.branch ||
+                              user?.bankDetails?.branch ||
+                              "Not provided"}
+                          </span>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[#878A93] text-sm font-normal">
+                            Sort Code
+                          </span>
+                          <span className="text-[#1A1A1A] text-base font-semibold">
+                            {accountDetails?.sortCode ||
+                              user?.bankDetails?.sortCode ||
+                              "Not provided"}
                           </span>
                         </div>
                       </div>
@@ -517,9 +666,9 @@ const Profile = () => {
                           </label>
                           <input
                             type="text"
-                            value={accountDetails.bankName}
+                            value={accountFormData.bankName}
                             onChange={(e) =>
-                              setAccountDetails((prev) => ({
+                              setAccountFormData((prev) => ({
                                 ...prev,
                                 bankName: e.target.value,
                               }))
@@ -534,9 +683,9 @@ const Profile = () => {
                           </label>
                           <input
                             type="text"
-                            value={accountDetails.accountNumber}
+                            value={accountFormData.accountNumber}
                             onChange={(e) =>
-                              setAccountDetails((prev) => ({
+                              setAccountFormData((prev) => ({
                                 ...prev,
                                 accountNumber: e.target.value,
                               }))
@@ -551,9 +700,9 @@ const Profile = () => {
                           </label>
                           <input
                             type="text"
-                            value={accountDetails.accountName}
+                            value={accountFormData.accountName}
                             onChange={(e) =>
-                              setAccountDetails((prev) => ({
+                              setAccountFormData((prev) => ({
                                 ...prev,
                                 accountName: e.target.value,
                               }))
@@ -562,13 +711,47 @@ const Profile = () => {
                             placeholder="Enter account holder name"
                           />
                         </div>
+                        <div className="flex flex-col gap-1">
+                          <label className="text-[#878A93] text-sm font-normal">
+                            Branch
+                          </label>
+                          <input
+                            type="text"
+                            value={accountFormData.branch}
+                            onChange={(e) =>
+                              setAccountFormData((prev) => ({
+                                ...prev,
+                                branch: e.target.value,
+                              }))
+                            }
+                            className="rounded-[14px] py-3 px-4 border border-[#D1DAEC]"
+                            placeholder="Enter branch"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <label className="text-[#878A93] text-sm font-normal">
+                            Sort Code
+                          </label>
+                          <input
+                            type="text"
+                            value={accountFormData.sortCode}
+                            onChange={(e) =>
+                              setAccountFormData((prev) => ({
+                                ...prev,
+                                sortCode: e.target.value,
+                              }))
+                            }
+                            className="rounded-[14px] py-3 px-4 border border-[#D1DAEC]"
+                            placeholder="Enter sort code"
+                          />
+                        </div>
                         <div className="flex items-center gap-3 mt-4 col-span-2">
                           <button
                             onClick={handleAccountDetailsSave}
-                            disabled={isPending}
+                            disabled={isAccountPending}
                             className="bg-primary text-white py-2 px-6 rounded-[14px] hover:bg-primary-dark transition-colors disabled:opacity-50"
                           >
-                            {isPending ? "Saving..." : "Save Changes"}
+                            {isAccountPending ? "Saving..." : "Save Changes"}
                           </button>
                           <button
                             onClick={() => setIsEditingAccount(false)}
