@@ -1,7 +1,7 @@
 import { Controller, useFormContext } from "react-hook-form";
 import MultiSelectField from "../multiselectfield";
 import { Textarea } from "../ui/textarea";
-import { Upload } from "lucide-react";
+import { Upload, FileText } from "lucide-react";
 import { Input } from "../ui/input";
 import {
   Select,
@@ -39,20 +39,26 @@ const Profiling = ({
     formState: { errors },
     watch,
     control,
-  } = useFormContext();
+    setValue, // Add setValue from useFormContext
+  } = useFormContext(); // This is the correct way to get form methods
 
   const availabilityOptions = Object.values(Availability).map((value) => ({
     label: value.replace("-", " ").replace(/\b\w/g, (c) => c.toUpperCase()),
     value,
   }));
 
-  const [preview, setPreview] = useState<string | null>(null);
-  const [fileSize, setFileSize] = useState<number | null>(null);
-  const [fileError, setFileError] = useState<string | null>(null);
+  const [idPreview, setIdPreview] = useState<string | null>(null);
+  const [idFileSize, setIdFileSize] = useState<number | null>(null);
+  const [idFileError, setIdFileError] = useState<string | null>(null);
+
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [resumeFileSize, setResumeFileSize] = useState<number | null>(null);
+  const [resumeFileError, setResumeFileError] = useState<string | null>(null);
 
   const identificationFile = watch("identification");
   const identityType = watch("identityType");
 
+  // Handle ID file changes
   useEffect(() => {
     if (identificationFile) {
       const file = Array.isArray(identificationFile)
@@ -61,26 +67,67 @@ const Profiling = ({
 
       if (file) {
         const sizeInMB = file.size / (1024 * 1024);
-        setFileSize(sizeInMB);
+        setIdFileSize(sizeInMB);
 
         if (sizeInMB > 5) {
-          setFileError("File size exceeds 5MB. Please upload a smaller image.");
-          setPreview(null);
+          setIdFileError("File size exceeds 5MB. Please upload a smaller image.");
+          setIdPreview(null);
           return;
         }
 
-        setFileError(null);
+        if (!file.type.startsWith('image/')) {
+          setIdFileError("Please upload an image file (JPEG, PNG)");
+          setIdPreview(null);
+          return;
+        }
+
+        setIdFileError(null);
         const objectUrl = URL.createObjectURL(file);
-        setPreview(objectUrl);
+        setIdPreview(objectUrl);
 
         return () => URL.revokeObjectURL(objectUrl);
       }
     } else {
-      setPreview(null);
-      setFileSize(null);
-      setFileError(null);
+      setIdPreview(null);
+      setIdFileSize(null);
+      setIdFileError(null);
     }
   }, [identificationFile]);
+
+  // Handle resume file changes
+  const handleResumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const sizeInMB = file.size / (1024 * 1024);
+      setResumeFileSize(sizeInMB);
+
+      // Validate file type
+      const allowedTypes = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'text/plain'
+      ];
+
+      if (!allowedTypes.includes(file.type)) {
+        setResumeFileError("Please upload a PDF, DOC, DOCX, or TXT file");
+        setResumeFile(null);
+        return;
+      }
+
+      if (sizeInMB > 10) {
+        setResumeFileError("File size exceeds 10MB. Please upload a smaller file.");
+        setResumeFile(null);
+        return;
+      }
+
+      setResumeFileError(null);
+      setResumeFile(file);
+      
+      // Use setValue from useFormContext instead of methods.setValue
+      setValue("resume", file);
+    }
+  };
 
   return (
     <div className="w-full flex flex-col gap-6">
@@ -99,7 +146,6 @@ const Profiling = ({
             {/* Availability */}
             <div className="flex flex-col gap-1">
               <label className="block text-sm">Availability</label>
-
               <Controller
                 name="availability"
                 control={control}
@@ -143,6 +189,44 @@ const Profiling = ({
               )}
             </div>
 
+            {/* Resume Upload */}
+            <div className="flex flex-col gap-1">
+              <label className="block text-sm">Upload Resume</label>
+              <p className="text-gray-500 text-xs">
+                Upload your resume (PDF, DOC, DOCX, TXT) - Max 10MB
+              </p>
+
+              <div className="flex flex-col gap-2">
+                <label
+                  className="flex cursor-pointer items-center justify-between rounded-[14px] py-3 px-4 border border-[#D1DAEC] hover:bg-gray-50 transition"
+                  htmlFor="resume"
+                >
+                  <span className="text-gray-600 text-sm">
+                    {resumeFile ? resumeFile.name : "Click to upload resume"}
+                  </span>
+                  <FileText className="text-gray-600 w-4 h-4" />
+                </label>
+                <Input
+                  type="file"
+                  id="resume"
+                  className="hidden"
+                  accept=".pdf,.doc,.docx,.txt,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+                  onChange={handleResumeChange}
+                />
+                
+                {resumeFile && (
+                  <div className="flex items-center gap-2 text-sm text-green-600">
+                    <FileText className="w-4 h-4" />
+                    <span>Resume ready for upload ({resumeFileSize?.toFixed(2)} MB)</span>
+                  </div>
+                )}
+                
+                {resumeFileError && (
+                  <p className="text-red-500 text-sm">{resumeFileError}</p>
+                )}
+              </div>
+            </div>
+
             {/* Identity Type */}
             <div className="flex flex-col gap-1">
               <label className="block text-sm">Identity type</label>
@@ -169,10 +253,10 @@ const Profiling = ({
                           NIN
                         </SelectItem>
                         <SelectItem value="driver license">
-                          Driver’s License
+                          Driver's License
                         </SelectItem>
                         <SelectItem value="voter's card">
-                          Voter’s Card
+                          Voter's Card
                         </SelectItem>
                       </SelectGroup>
                     </SelectContent>
@@ -222,8 +306,8 @@ const Profiling = ({
                 )}
               />
 
-              {fileError && (
-                <p className="text-red-500 text-sm">{fileError}</p>
+              {idFileError && (
+                <p className="text-red-500 text-sm">{idFileError}</p>
               )}
               {errors.identification?.message && (
                 <p className="text-red-500 text-sm">
@@ -231,15 +315,15 @@ const Profiling = ({
                 </p>
               )}
 
-              {/* Image Preview */}
-              {preview && !fileError && (
+              {/* ID Image Preview */}
+              {idPreview && !idFileError && (
                 <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
                   <div className="flex flex-col items-center gap-3">
                     <p className="text-sm font-medium text-gray-700">
                       ID Document Preview
                     </p>
                     <Image
-                      src={preview}
+                      src={idPreview}
                       alt="ID Preview"
                       width={80}
                       height={64}
@@ -247,34 +331,12 @@ const Profiling = ({
                       unoptimized
                     />
                     <p className="text-xs text-gray-600 mt-1">
-                      File Size: {fileSize?.toFixed(2)} MB
+                      File Size: {idFileSize?.toFixed(2)} MB
                     </p>
-                    {/* {identityType && (
-                      <p className="text-xs text-blue-600 mt-1">
-                        Type: {identityType}
-                      </p>
-                    )}
-                    <p className="text-xs text-green-600 mt-1">
-                      ✓ Document ready for upload
-                    </p> */}
                   </div>
                 </div>
               )}
             </div>
-
-            {/* Cloudinary Upload Example (Commented) */}
-            {/*
-              // To integrate with Cloudinary:
-              const formData = new FormData();
-              formData.append("file", identificationFile);
-              formData.append("upload_preset", "<your_upload_preset>");
-              const response = await fetch("https://api.cloudinary.com/v1_1/<cloud_name>/upload", {
-                method: "POST",
-                body: formData,
-              });
-              const data = await response.json();
-              console.log("Cloudinary URL:", data.secure_url);
-            */}
           </div>
 
           {/* Navigation */}
@@ -292,7 +354,7 @@ const Profiling = ({
               type="submit"
               className="bg-primary rounded-[14px] w-fit text-white py-2 px-4"
             >
-              {isAdding ? "Submitting..." : "Next"}
+              {isAdding ? "Submitting..." : "Complete Setup"}
             </Button>
           </div>
         </form>

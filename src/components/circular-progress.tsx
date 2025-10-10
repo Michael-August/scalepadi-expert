@@ -3,16 +3,20 @@
 import React from 'react';
 
 export default function CircularProgress({ percentage }: { percentage: number }) {
+    // Ensure percentage is a valid number, default to 0 if invalid
+    const validPercentage = Number(percentage) || 0;
+    const clampedPercentage = Math.min(100, Math.max(0, validPercentage));
+    
     const radius = 40;
     const stroke = 8;
     const normalizedRadius = radius - stroke / 2;
     const circumference = normalizedRadius * 2 * Math.PI;
-    const strokeDashoffset = circumference - (percentage / 100) * circumference;
+    const strokeDashoffset = circumference - (clampedPercentage / 100) * circumference;
 
     const getColor = () => {
-        if (percentage < 40) return '#EF4444';
-        if (percentage < 60) return '#F97316';
-        if (percentage < 80) return '#FACC15';
+        if (clampedPercentage < 40) return '#EF4444';
+        if (clampedPercentage < 60) return '#F97316';
+        if (clampedPercentage < 80) return '#FACC15';
         return '#22C55E';
     };
 
@@ -33,7 +37,7 @@ export default function CircularProgress({ percentage }: { percentage: number })
                     strokeWidth={stroke}
                     strokeLinecap="round"
                     strokeDasharray={circumference + ' ' + circumference}
-                    strokeDashoffset={strokeDashoffset}
+                    strokeDashoffset={strokeDashoffset || 0} // Fallback to 0
                     r={normalizedRadius}
                     cx={radius}
                     cy={radius}
@@ -48,7 +52,7 @@ export default function CircularProgress({ percentage }: { percentage: number })
                     fill="#1E293B"
                     fontWeight="bold"
                 >
-                    {percentage}%
+                    {clampedPercentage}%
                 </text>
             </svg>
         </div>
