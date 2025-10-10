@@ -23,6 +23,8 @@ const Opportunities = () => {
 
 	const [params, setParams] = useState({ status: "pending" });
 
+	const [user, setUser] = useState<any>();
+
 	const { projects, isLoading } = useGetProjects(params);
 	const { hires, isLoading: isLoadingHires } = useGetBusinessHire();
 	const { acceptOrDecline, isPending } = useAcceptDeclineMatch();
@@ -105,6 +107,13 @@ const Opportunities = () => {
 		setShowDeclineModal(false);
 		setSelectedProjectId(null);
 	};
+
+	useEffect(() => {
+		const storedUser = localStorage.getItem("user");
+		if (storedUser) {
+			setUser(JSON.parse(storedUser));
+		}
+	}, []);
 
 	useEffect(() => {
 		setParams({ status: activeTab === "admin" ? "pending" : "completed" });
@@ -257,36 +266,42 @@ const Opportunities = () => {
 											</div>
 										</div>
 
-										<div className="flex gap-4">
-											<Button
-												disabled={isPending}
-												onClick={() =>
-													handleAcceptDecline(
-														"accepted",
-														project.id
-													)
-												}
-												className="bg-primary text-white w-fit text-xs rounded-[14px] px-4 py-6"
-											>
-												{isPending
-													? "Accepting match..."
-													: "Accept Match"}
-											</Button>
-											<Button
-												disabled={isPending}
-												variant={"destructive"}
-												onClick={() =>
-													handleDeclineClick(
-														project.id
-													)
-												}
-												className="w-fit text-xs rounded-[14px] px-4 py-6"
-											>
-												{isPending
-													? "Declining match..."
-													: "Decline Match"}
-											</Button>
-										</div>
+										{project?.experts?.some(
+											(expert: any) =>
+												expert.id.id === user.id &&
+												expert.status === "pending"
+										) && (
+											<div className="flex gap-4">
+												<Button
+													disabled={isPending}
+													onClick={() =>
+														handleAcceptDecline(
+															"accepted",
+															project.id
+														)
+													}
+													className="bg-primary text-white w-fit text-xs rounded-[14px] px-4 py-6"
+												>
+													{isPending
+														? "Accepting match..."
+														: "Accept Match"}
+												</Button>
+												<Button
+													disabled={isPending}
+													variant={"destructive"}
+													onClick={() =>
+														handleDeclineClick(
+															project.id
+														)
+													}
+													className="w-fit text-xs rounded-[14px] px-4 py-6"
+												>
+													{isPending
+														? "Declining match..."
+														: "Decline Match"}
+												</Button>
+											</div>
+										)}
 									</div>
 								))}
 							</div>
