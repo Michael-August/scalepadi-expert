@@ -108,20 +108,21 @@ const Profiling = ({
       // Validate file type
       const allowedTypes = [
         'application/pdf',
-        'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'text/plain'
+        // 'application/msword',
+        // 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        // 'text/plain'
+        // DOC, DOCX, or TXT
       ];
 
       if (!allowedTypes.includes(file.type)) {
-        setResumeFileError("Please upload a PDF, DOC, DOCX, or TXT file");
+        setResumeFileError("Please upload a PDF file");
         setResumeFile(null);
         setValue("resume", null);
         return;
       }
 
-      if (sizeInMB > 10) {
-        setResumeFileError("File size exceeds 10MB. Please upload a smaller file.");
+      if (sizeInMB > 5) {
+        setResumeFileError("File size exceeds 5MB. Please upload a smaller file.");
         setResumeFile(null);
         setValue("resume", null);
         return;
@@ -224,7 +225,8 @@ const Profiling = ({
             <div className="flex flex-col gap-1">
               <label className="block text-sm">Upload Resume</label>
               <p className="text-gray-500 text-xs">
-                Upload your resume (PDF, DOC, DOCX, TXT) - Max 10MB
+                Upload your resume (PDF) - Max 5MB
+                {/* , DOC, DOCX, TXT */}
               </p>
 
               <div className="flex flex-col gap-2">
@@ -241,7 +243,9 @@ const Profiling = ({
                   type="file"
                   id="resume"
                   className="hidden"
-                  accept=".pdf,.doc,.docx,.txt,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+                  accept=".pdf,application/pdf"
+                  // ,.doc,.docx,.txt
+                  // application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain
                   onChange={handleResumeChange}
                 />
                 
