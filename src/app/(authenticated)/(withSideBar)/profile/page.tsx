@@ -1,6 +1,11 @@
 "use client";
 
-import { useCompleteProfileSetUp, useSetexpertDetails } from "@/hooks/useAuth";
+import {
+  useAccountDetailsUpload,
+  useGetAccountDetails,
+  useUpdateAccountDetails,
+} from "@/hooks/useAccount";
+import { useCompleteProfileSetUp } from "@/hooks/useAuth";
 import {
   Clock,
   Edit2,
@@ -9,24 +14,51 @@ import {
   Trash2Icon,
   Verified,
   X,
+  FileText,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import dynamic from 'next/dynamic';
+
+// Dynamically import react-pdf components with no SSR
+const PDFViewer = dynamic(() => import('./PDFViewer'), {
+  ssr: false,
+  loading: () => <div className="flex justify-center items-center py-12">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+    <span className="ml-3 text-gray-600">Loading PDF viewer...</span>
+  </div>
+});
 
 const Profile = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [profileImage, setProfileImage] = useState<string | null>(null);
-
-  const [user, setUser] = useState<any>();
-  const { completeProfileSetup, isPending } = useCompleteProfileSetUp();
-
+  const [user, setUser] = useState<any>(null);
+  const { completeProfileSetup, isPending: isProfilePending } =
+    useCompleteProfileSetUp();
   const [activeTab, setActiveTab] = useState<"about" | "portfolio" | "account">(
     "about"
   );
-  // console.log(user);
+  const [showResumePdfPreview, setShowResumePdfPreview] = useState(false);
+  const [showIdPdfPreview, setShowIdPdfPreview] = useState(false);
+
+  const { accountDetailsUpload, isPending: isUploadPending } =
+    useAccountDetailsUpload();
+  const { data: accountDetails, isLoading: isAccountLoading } =
+    useGetAccountDetails();
+  const { updateAccountDetails, isPending: isUpdatePending } =
+    useUpdateAccountDetails();
+
+  const [isEditingAccount, setIsEditingAccount] = useState(false);
+  const [accountFormData, setAccountFormData] = useState({
+    bankName: "",
+    accountNumber: "",
+    accountName: "",
+    branch: "",
+    sortCode: "",
+  });
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -34,14 +66,11 @@ const Profile = () => {
       const imageUrl = URL.createObjectURL(file);
       setProfileImage(imageUrl);
 
-      // Upload to server
       const formData = new FormData();
       formData.append("profilePicture", file);
 
       completeProfileSetup(formData, {
         onSuccess: (data) => {
-          // console.log(data);
-          // Update local user state
           const updatedUser = {
             ...user,
             profilePicture: data?.data?.profilePicture,
@@ -50,11 +79,6 @@ const Profile = () => {
           localStorage.setItem("user", JSON.stringify(updatedUser));
           toast.success("Profile picture updated successfully");
         },
-        // onError: (error: any) => {
-        //   toast.error(
-        //     error?.message || "An error occurred while updating profile picture"
-        //   );
-        // },
       });
     }
   };
@@ -65,6 +89,79 @@ const Profile = () => {
     const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
     setUser(storedUser);
   }, []);
+
+  useEffect(() => {
+    if (accountDetails) {
+      setAccountFormData({
+        bankName: accountDetails?.bankName || "",
+        accountNumber: accountDetails?.accountNumber || "",
+        accountName: accountDetails?.accountName || "",
+        branch: accountDetails?.branch || "",
+        sortCode: accountDetails?.sortCode || "",
+      });
+    }
+  }, [accountDetails]);
+
+  const handleAccountDetailsSave = () => {
+    const hasExistingAccount =
+      accountDetails &&
+      (accountDetails.bankName ||
+        accountDetails.accountNumber ||
+        accountDetails.accountName);
+
+    const accountId = accountDetails?.id || user?.expertId;
+
+    if (hasExistingAccount && accountId) {
+      // Update existing account details
+      updateAccountDetails(
+        { accountId, data: accountFormData },
+        {
+          onSuccess: () => {
+            const updatedUser = {
+              ...user,
+              bankDetails: accountFormData,
+            };
+            setUser(updatedUser);
+            localStorage.setItem("user", JSON.stringify(updatedUser));
+            setIsEditingAccount(false);
+            toast.success("Account details updated successfully");
+          },
+          onError: (error: Error) => {
+            console.error("Failed to update account details:", error);
+          },
+        }
+      );
+    } else {
+      accountDetailsUpload(accountFormData, {
+        onSuccess: () => {
+          const updatedUser = {
+            ...user,
+            bankDetails: accountFormData,
+          };
+          setUser(updatedUser);
+          localStorage.setItem("user", JSON.stringify(updatedUser));
+          setIsEditingAccount(false);
+          toast.success("Account details saved successfully");
+        },
+        onError: (error: Error) => {
+          console.error("Failed to upload account details:", error);
+        },
+      });
+    }
+  };
+
+  // Add loading state
+  if (!user) {
+    return (
+      <div className="w-full flex flex-col gap-4 lg:w-[919px]">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-lg">Loading profile...</div>
+        </div>
+      </div>
+    );
+  }
+
+  const isAccountPending = isUploadPending || isUpdatePending;
 
   return (
     <div className="w-full flex flex-col gap-4 lg:w-[919px]">
@@ -131,7 +228,6 @@ const Profile = () => {
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                {/* Edit / Upload Button */}
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
@@ -141,7 +237,6 @@ const Profile = () => {
                   Change Image
                 </button>
 
-                {/* Hidden File Input */}
                 <input
                   type="file"
                   ref={fileInputRef}
@@ -150,7 +245,6 @@ const Profile = () => {
                   onChange={handleFileChange}
                 />
 
-                {/* Delete / Reset Button */}
                 <button
                   type="button"
                   onClick={() => {
@@ -174,39 +268,33 @@ const Profile = () => {
               <div>
                 <div className="tab pt-2 w-1/2 flex items-center gap-5 bg-[#F9FAFB]">
                   <div
-                    className={`flex cursor-pointer w-full items-center justify-center border-b-2 pb-3
-                                        hover:border-[#3A96E8] transition-colors 
-                                        ${
-                                          activeTab === "about"
-                                            ? "border-[#3A96E8] text-[#3A96E8]"
-                                            : "border-transparent"
-                                        }`}
+                    className={`flex cursor-pointer w-full items-center justify-center border-b-2 pb-3 hover:border-[#3A96E8] transition-colors ${
+                      activeTab === "about"
+                        ? "border-[#3A96E8] text-[#3A96E8]"
+                        : "border-transparent"
+                    }`}
                     onClick={() => setActiveTab("about")}
                   >
                     <span className="text-sm">About</span>
                   </div>
 
                   <div
-                    className={`flex cursor-pointer w-full items-center justify-center border-b-2 pb-3
-                                        hover:border-[#3A96E8] transition-colors 
-                                        ${
-                                          activeTab === "portfolio"
-                                            ? "border-[#3A96E8] text-[#3A96E8]"
-                                            : "border-transparent"
-                                        }`}
+                    className={`flex cursor-pointer w-full items-center justify-center border-b-2 pb-3 hover:border-[#3A96E8] transition-colors ${
+                      activeTab === "portfolio"
+                        ? "border-[#3A96E8] text-[#3A96E8]"
+                        : "border-transparent"
+                    }`}
                     onClick={() => setActiveTab("portfolio")}
                   >
                     <span className="text-sm">Portfolio</span>
                   </div>
 
                   <div
-                    className={`flex cursor-pointer w-full items-center justify-center border-b-2 pb-3
-                                        hover:border-[#3A96E8] transition-colors 
-                                        ${
-                                          activeTab === "account"
-                                            ? "border-[#3A96E8] text-[#3A96E8]"
-                                            : "border-transparent"
-                                        }`}
+                    className={`flex cursor-pointer w-full items-center justify-center border-b-2 pb-3 hover:border-[#3A96E8] transition-colors ${
+                      activeTab === "account"
+                        ? "border-[#3A96E8] text-[#3A96E8]"
+                        : "border-transparent"
+                    }`}
                     onClick={() => setActiveTab("account")}
                   >
                     <span className="text-sm">Account details</span>
@@ -216,6 +304,7 @@ const Profile = () => {
 
               {activeTab === "about" && (
                 <div className="flex flex-col gap-4">
+                  {/* About section remains the same */}
                   <div className="about flex flex-col capitalize rounded-[14px] bg-white border border-[#D1DAEC80] gap-3 p-4">
                     <div className="flex items-center justify-between">
                       <span className="font-medium text-[20px] text-primary">
@@ -301,99 +390,16 @@ const Profile = () => {
                       </div>
                     </div>
                   </div>
+                </div>
+              )}
 
-                  <div className="about flex flex-col capitalize rounded-[14px] bg-white border border-[#D1DAEC80] gap-3 p-4">
+              {activeTab === "portfolio" && (
+                <div className="flex flex-col gap-4">
+                  {/* Resume Section */}
+                  <div className="portfolio flex flex-col rounded-[14px] bg-white border border-[#D1DAEC80] gap-3 p-4">
                     <div className="flex items-center justify-between">
                       <span className="font-medium text-[20px] text-primary">
-                        Professional Details
-                      </span>
-                      <span
-                        onClick={() =>
-                          router.push(
-                            `/profile-setup?step=professional-experience`
-                          )
-                        }
-                        className="border border-[#E7E8E9] hover:bg-yellow-400 hover:text-white rounded-[10px] p-2 bg-white cursor-pointer text-[#0E1426] text-sm"
-                      >
-                        Edit
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                      <div className="flex flex-col gap-1">
-                        <span className="text-[#878A93] text-sm font-normal">
-                          Years of experience
-                        </span>
-                        <span className="text-[#1A1A1A] text-base font-semibold">
-                          {user?.yearsOfExperience || "Not specified"}
-                        </span>
-                      </div>
-                      <div className="flex flex-col gap-1">
-                        <span className="text-[#878A93] text-sm font-normal">
-                          Category
-                        </span>
-                        <span className="text-[#1A1A1A] text-base font-semibold">
-                          {user?.category || "Not specified"}
-                        </span>
-                      </div>
-                      <div className="flex flex-col gap-1">
-                        <span className="text-[#878A93] text-sm font-normal">
-                          Role
-                        </span>
-                        <span className="text-[#1A1A1A] text-base font-semibold">
-                          {user?.role?.[0] || "Not specified"}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex flex-col gap-4 mt-5">
-                      <span className="font-medium text-sm text-[#878A93]">
-                        Preferred industries
-                      </span>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        {user?.preferredIndustry?.length > 0 ? (
-                          user.preferredIndustry.map(
-                            (industry: string, index: number) => (
-                              <span
-                                key={index}
-                                className="bg-[#F2F7FF] p-2 rounded-[14px] text-xs text-[#1E88E5]"
-                              >
-                                {industry}
-                              </span>
-                            )
-                          )
-                        ) : (
-                          <span className="text-[#878A93] text-sm">
-                            No industries specified
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex flex-col gap-4 mt-5">
-                      <span className="font-medium text-sm text-[#878A93]">
-                        Skills
-                      </span>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        {user?.skills?.length > 0 ? (
-                          user.skills.map((skill: string, index: number) => (
-                            <span
-                              key={index}
-                              className="bg-[#F2F7FF] p-2 rounded-[14px] text-xs text-[#1E88E5]"
-                            >
-                              {skill}
-                            </span>
-                          ))
-                        ) : (
-                          <span className="text-[#878A93] text-sm">
-                            No skills specified
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="about flex flex-col rounded-[14px] bg-white border border-[#D1DAEC80] gap-3 p-4">
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium text-[20px] text-primary">
-                        External links
+                        Resume
                       </span>
                       <span
                         onClick={() =>
@@ -401,66 +407,73 @@ const Profile = () => {
                         }
                         className="border border-[#E7E8E9] hover:bg-yellow-400 hover:text-white rounded-[10px] p-2 bg-white cursor-pointer text-[#0E1426] text-sm"
                       >
-                        Edit
+                        Update
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-1 flex-wrap justify-between">
-                      {user?.socialLinks &&
-                      Object.values(user.socialLinks).some((value) => value) ? (
-                        Object.entries(user.socialLinks || {}).map(
-                          ([key, value]: [string, unknown]) =>
-                            String(value) && (
-                              <Link
-                                href={String(value)}
+                    {/* Resume Display */}
+                    <div className="flex flex-col gap-4">
+                      {user?.resume ? (
+                        <div className="flex flex-col gap-3">
+                          <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
+                            <FileText className="w-8 h-8 text-green-600" />
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-green-800">
+                                Resume Uploaded
+                              </p>
+                              <p className="text-xs text-green-600">
+                                Click update to change your resume
+                              </p>
+                            </div>
+                            <div className="flex gap-2">
+                              <a
+                                href={user.resume}
                                 target="_blank"
-                                key={key}
-                                className="flex cursor-pointer flex-col gap-1"
+                                rel="noopener noreferrer"
+                                className="px-3 py-1 bg-primary text-white rounded text-sm transition-colors"
                               >
-                                <span className="font-medium text-sm text-[#878A93]">
-                                  {key.charAt(0).toUpperCase() + key.slice(1)}
-                                </span>
-                                <span className="flex gap-2 border text-[#878A93] border-[#ABC6FB] bg-white rounded-[14px] p-[10px] items-center">
-                                  <LinkIcon className="text-[#FFC371] w-4 h-4" />
-                                  {String(value)}
-                                </span>
-                              </Link>
-                            )
-                        )
+                                Download
+                              </a>
+                              <button
+                                onClick={() =>
+                                  setShowResumePdfPreview(!showResumePdfPreview)
+                                }
+                                className="px-3 py-1 bg-gray-600 text-white rounded text-sm transition-colors"
+                              >
+                                {showResumePdfPreview
+                                  ? "Hide Preview"
+                                  : "Preview"}
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* PDF Preview */}
+                          {showResumePdfPreview && (
+                            <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                              <PDFViewer 
+                                fileUrl={user.resume}
+                                type="resume"
+                              />
+                            </div>
+                          )}
+                        </div>
                       ) : (
-                        <span className="text-[#878A93] text-sm">
-                          No external links provided
-                        </span>
+                        <div className="flex items-center gap-3 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                          <FileText className="w-8 h-8 text-yellow-600" />
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-yellow-800">
+                              No Resume Uploaded
+                            </p>
+                            <p className="text-xs text-yellow-600">
+                              Upload your resume to complete your profile
+                            </p>
+                          </div>
+                        </div>
                       )}
                     </div>
                   </div>
 
-                  {/* <div className="about flex flex-col rounded-[14px] bg-white border border-[#D1DAEC80] gap-3 p-4">
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium text-[20px] text-primary">
-                        Settings
-                      </span>
-                      <span className="border border-[#E7E8E9] rounded-[10px] p-2 bg-white cursor-pointer text-[#0E1426] text-sm">
-                        Edit
-                      </span>
-                    </div>
-                  </div> */}
-                </div>
-              )}
-
-              {activeTab === "portfolio" && (
-                <div className="flex flex-col gap-4">
-                  <div className="portfolio flex flex-col rounded-[14px] bg-white border border-[#D1DAEC80] gap-3 p-4">
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium text-[20px] text-primary">
-                        Resume
-                      </span>
-                      <span className="border border-[#E7E8E9] rounded-[10px] p-2 bg-white cursor-pointer text-[#0E1426] text-sm">
-                        Update
-                      </span>
-                    </div>
-                  </div>
-
+                  {/* Identity Section */}
                   <div className="portfolio flex flex-col rounded-[14px] bg-white border border-[#D1DAEC80] gap-3 p-4">
                     <div className="flex items-center justify-between">
                       <span className="font-medium text-[20px] text-primary">
@@ -493,25 +506,62 @@ const Profile = () => {
                         </span>
                       </div>
 
-                      {/* ID Image Display */}
+                      {/* ID Document Display */}
                       {user?.identification?.idImage && (
-                        <div className="flex flex-col gap-2">
+                        <div className="flex flex-col gap-3">
                           <span className="text-[#878A93] text-sm font-normal">
                             ID Document
                           </span>
-                          <div className="relative w-full max-w-md">
-                            <Image
-                              src={user.identification.idImage}
-                              alt="ID Document"
-                              width={400}
-                              height={200}
-                              className="w-full h-auto rounded-lg border border-gray-200 object-cover"
-                              unoptimized
-                            />
-                            {/* <div className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded text-xs">
-                              Verified
-                            </div> */}
-                          </div>
+
+                          {/* Check if file is PDF */}
+                          {user.identification.idImage
+                            .toLowerCase()
+                            .endsWith(".pdf") ? (
+                            <div className="flex flex-col gap-3">
+                              <div className="flex gap-2">
+                                <a
+                                  href={user.identification.idImage}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors"
+                                >
+                                  Download PDF
+                                </a>
+                                <button
+                                  onClick={() =>
+                                    setShowIdPdfPreview(!showIdPdfPreview)
+                                  }
+                                  className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors"
+                                >
+                                  {showIdPdfPreview
+                                    ? "Hide Preview"
+                                    : "Preview PDF"}
+                                </button>
+                              </div>
+
+                              {/* PDF Preview for ID Document */}
+                              {showIdPdfPreview && (
+                                <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                                  <PDFViewer 
+                                    fileUrl={user.identification.idImage}
+                                    type="id"
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            // Show image for non-PDF files
+                            <div className="relative w-40">
+                              <Image
+                                src={user.identification.idImage}
+                                alt="ID Document"
+                                width={160}
+                                height={100}
+                                className="w-full h-auto rounded-md border border-gray-200 object-cover"
+                                unoptimized
+                              />
+                            </div>
+                          )}
                         </div>
                       )}
 
@@ -539,15 +589,179 @@ const Profile = () => {
 
               {activeTab === "account" && (
                 <div className="flex flex-col gap-4">
+                  {/* Account section remains the same */}
                   <div className="about flex flex-col rounded-[14px] bg-white border border-[#D1DAEC80] gap-3 p-4">
                     <div className="flex items-center justify-between">
                       <span className="font-medium text-[20px] text-primary">
-                        Account settings
+                        Account Details
                       </span>
-                      <span className="border border-[#E7E8E9] rounded-[10px] p-2 bg-white cursor-pointer text-[#0E1426] text-sm">
-                        Edit
+                      <span
+                        onClick={() => setIsEditingAccount(!isEditingAccount)}
+                        className="border border-[#E7E8E9] hover:bg-yellow-400 hover:text-white rounded-[10px] p-2 bg-white cursor-pointer text-[#0E1426] text-sm"
+                      >
+                        {isEditingAccount ? "Cancel" : "Edit"}
                       </span>
                     </div>
+
+                    {!isEditingAccount ? (
+                      // Display mode
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[#878A93] text-sm font-normal">
+                            Bank Name
+                          </span>
+                          <span className="text-[#1A1A1A] text-base font-semibold">
+                            {accountDetails?.bankName ||
+                              user?.bankDetails?.bankName ||
+                              "Not provided"}
+                          </span>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[#878A93] text-sm font-normal">
+                            Account Number
+                          </span>
+                          <span className="text-[#1A1A1A] text-base font-semibold">
+                            {accountDetails?.accountNumber ||
+                              user?.bankDetails?.accountNumber ||
+                              "Not provided"}
+                          </span>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[#878A93] text-sm font-normal">
+                            Account Name
+                          </span>
+                          <span className="text-[#1A1A1A] text-base font-semibold">
+                            {accountDetails?.accountName ||
+                              user?.bankDetails?.accountName ||
+                              "Not provided"}
+                          </span>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[#878A93] text-sm font-normal">
+                            Branch
+                          </span>
+                          <span className="text-[#1A1A1A] text-base font-semibold">
+                            {accountDetails?.branch ||
+                              user?.bankDetails?.branch ||
+                              "Not provided"}
+                          </span>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[#878A93] text-sm font-normal">
+                            Sort Code
+                          </span>
+                          <span className="text-[#1A1A1A] text-base font-semibold">
+                            {accountDetails?.sortCode ||
+                              user?.bankDetails?.sortCode ||
+                              "Not provided"}
+                          </span>
+                        </div>
+                      </div>
+                    ) : (
+                      // Edit mode
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <div className="flex flex-col gap-1">
+                          <label className="text-[#878A93] text-sm font-normal">
+                            Bank Name
+                          </label>
+                          <input
+                            type="text"
+                            value={accountFormData.bankName}
+                            onChange={(e) =>
+                              setAccountFormData((prev) => ({
+                                ...prev,
+                                bankName: e.target.value,
+                              }))
+                            }
+                            className="rounded-[14px] py-3 px-4 border border-[#D1DAEC]"
+                            placeholder="Enter bank name"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <label className="text-[#878A93] text-sm font-normal">
+                            Account Number
+                          </label>
+                          <input
+                            type="text"
+                            value={accountFormData.accountNumber}
+                            onChange={(e) =>
+                              setAccountFormData((prev) => ({
+                                ...prev,
+                                accountNumber: e.target.value,
+                              }))
+                            }
+                            className="rounded-[14px] py-3 px-4 border border-[#D1DAEC]"
+                            placeholder="Enter account number"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <label className="text-[#878A93] text-sm font-normal">
+                            Account Name
+                          </label>
+                          <input
+                            type="text"
+                            value={accountFormData.accountName}
+                            onChange={(e) =>
+                              setAccountFormData((prev) => ({
+                                ...prev,
+                                accountName: e.target.value,
+                              }))
+                            }
+                            className="rounded-[14px] py-3 px-4 border border-[#D1DAEC]"
+                            placeholder="Enter account holder name"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <label className="text-[#878A93] text-sm font-normal">
+                            Branch
+                          </label>
+                          <input
+                            type="text"
+                            value={accountFormData.branch}
+                            onChange={(e) =>
+                              setAccountFormData((prev) => ({
+                                ...prev,
+                                branch: e.target.value,
+                              }))
+                            }
+                            className="rounded-[14px] py-3 px-4 border border-[#D1DAEC]"
+                            placeholder="Enter branch"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <label className="text-[#878A93] text-sm font-normal">
+                            Sort Code
+                          </label>
+                          <input
+                            type="text"
+                            value={accountFormData.sortCode}
+                            onChange={(e) =>
+                              setAccountFormData((prev) => ({
+                                ...prev,
+                                sortCode: e.target.value,
+                              }))
+                            }
+                            className="rounded-[14px] py-3 px-4 border border-[#D1DAEC]"
+                            placeholder="Enter sort code"
+                          />
+                        </div>
+                        <div className="flex items-center gap-3 mt-4 col-span-2">
+                          <button
+                            onClick={handleAccountDetailsSave}
+                            disabled={isAccountPending}
+                            className="bg-primary text-white py-2 px-6 rounded-[14px] hover:bg-primary-dark transition-colors disabled:opacity-50"
+                          >
+                            {isAccountPending ? "Saving..." : "Save Changes"}
+                          </button>
+                          <button
+                            onClick={() => setIsEditingAccount(false)}
+                            className="border border-gray-300 text-gray-700 py-2 px-6 rounded-[14px] hover:bg-gray-50 transition-colors"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

@@ -58,6 +58,7 @@ const ProjectDetails = () => {
   const { task, isLoading: isLoadingTask } = useGetTask(taskId);
   const { submitTask, isPending } = useSubmitTask(taskId);
 
+  console.log(task);
   const handleAddDocument = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files) return;
@@ -127,8 +128,8 @@ const ProjectDetails = () => {
             <Skeleton className="h-16 w-full rounded-xl" />
           ) : (
             <div className="flex w-full items-center gap-3">
-              <div className="bg-[#D1F7FF] flex items-center justify-center p-[5.84px] text-[#1A1A1A] text-xs h-[54px] rounded-[11.68px]">
-                {project?.data?.client || "Client"}
+              <div className="bg-[#D1F7FF] flex items-center justify-center p-[5.84px] text-[#1A1A1A] text-xs h-[54px] w-[54px] rounded-[11.68px]">
+                {project?.data?.businessId?.name?.trim().split(" ")[0] || "Client"}
               </div>
               <div className="flex flex-col gap-2">
                 <span className="text-sm text-[#878A93] ">

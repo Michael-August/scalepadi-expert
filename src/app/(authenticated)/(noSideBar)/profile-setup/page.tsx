@@ -1,12 +1,12 @@
-import ProfileSetUp from "@/components/profile-setup/ProfileSetup-page"
-import { Suspense } from "react"
+import ProfileSetUp from "@/components/profile-setup/ProfileSetup-page";
+import { Suspense } from "react";
 
-const Page = () => { 
-    return (
-        <Suspense fallback={<div>Loading...</div>}>
-            <ProfileSetUp />
-        </Suspense>
-    )
-}
+const Page = () => {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ProfileSetUp />
+    </Suspense>
+  );
+};
 
-export default Page
+export default Page;

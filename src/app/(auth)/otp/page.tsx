@@ -92,7 +92,7 @@ const OTP = () => {
       onSuccess: (res) => {
         toast.success(res?.data?.message || "Email verified successfully");
         localStorage.setItem("token", res.data.token);
-        router.push("/profile-setup");
+        window.location.href = "/profile-setup";
         localStorage.removeItem("newUserEmail");
       }
     });

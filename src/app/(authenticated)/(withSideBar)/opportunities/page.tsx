@@ -167,6 +167,8 @@ const Opportunities = () => {
 		setParams({ status: activeTab === "admin" ? "pending" : "completed" });
 	}, [activeTab]);
 
+	//   console.log(projects.data)
+
 	return (
 		<div className="w-full flex flex-col gap-4 lg:w-[919px]">
 			<div className="flex w-full flex-col gap-6">
@@ -234,10 +236,10 @@ const Opportunities = () => {
 										className="opportunity w-full p-3 rounded-2xl flex flex-col gap-2"
 									>
 										<div className="top border-b border-primary-border pb-3 w-full flex items-center gap-3">
-											<div className="bg-[#D1F7FF] flex items-center justify-center p-[5.84px] text-[#1A1A1A] text-xs h-[54px] rounded-[11.68px]">
-												{project?.client?.name?.charAt(
-													0
-												) || "C"}
+											<div className="bg-[#D1F7FF] flex items-center justify-center p-[5.84px] text-[#1A1A1A] text-xs h-[54px] w-[54px] rounded-[11.68px]">
+												{project?.businessId?.title
+													?.trim()
+													.split(" ")[0] || "B"}
 											</div>
 											<div className="flex flex-col gap-2">
 												<span className="text-sm text-[#878A93] ">

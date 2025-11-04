@@ -10,6 +10,7 @@ import { useCompleteProfileSetUp } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { useRouter, useSearchParams } from "next/navigation";
 
+// Removed "Account Details" from steps
 const steps = ["About You", "Professional Experience", "Profiling"];
 
 const ProfileSetUp = () => {
@@ -30,10 +31,10 @@ const ProfileSetUp = () => {
       yearsOfExperience: "",
       portfolio: "",
       linkedin: "",
-      // resume: "",
+      resume: null, // Added resume field
       bio: "",
       identityType: "",
-      identification: null, // single file
+      identification: null,
       availability: "",
     },
   });
@@ -41,8 +42,8 @@ const ProfileSetUp = () => {
   const [user, setUser] = useState<any>();
   const router = useRouter();
 
-  const seaarchParams = useSearchParams();
-  const stepParam = seaarchParams.get("step");
+  const searchParams = useSearchParams();
+  const stepParam = searchParams.get("step");
 
   useEffect(() => {
     if (stepParam) {
@@ -61,92 +62,178 @@ const ProfileSetUp = () => {
   const onNext = () => setCurrentStep((prev) => prev + 1);
   const onBack = () => setCurrentStep((prev) => prev - 1);
 
-  const onSubmitFinal = (data: any) => {
-    let stepRate = 0;
-    if (currentStep === 0) stepRate = 30;
-    if (currentStep === 1) stepRate = 70;
-    if (currentStep === 2) stepRate = 100;
+  // In your ProfileSetUp component, update the onSubmitFinal function:
+const onSubmitFinal = (data: any) => {
+  let stepRate = 0;
+  if (currentStep === 0) stepRate = 30;
+  if (currentStep === 1) stepRate = 70;
+  if (currentStep === 2) stepRate = 100;
 
-    // Use user?.regPercentage if greater
-    let completionRate =
-      user?.regPercentage && user.regPercentage >= stepRate
-        ? user.regPercentage
-        : stepRate;
+  let completionRate =
+    user?.regPercentage && user.regPercentage >= stepRate
+      ? user.regPercentage
+      : stepRate;
 
-    if (currentStep === 0) {
-      completeProfileSetup(
-        { ...data, regPercentage: completionRate },
-        {
-          onSuccess: () => {
-            // toast.success("Expert details added successfully");
-            if (stepParam) {
-              router.push("/profile");
-            } else {
-              onNext();
-            }
-          },
-          //   onError: () => {
-          //     toast.error("Error adding Expert details");
-          //   },
-        }
-      );
-    }
-
-    if (currentStep === 1) {
-      const payload = {
-        ...data,
-        socialLinks: {
-          linkedin: data.linkedin,
-          website: data.portfolio,
-        },
-      };
-      completeProfileSetup(
-        { ...payload, regPercentage: completionRate },
-        {
-          onSuccess: () => {
-            // toast.success("Expert experience details added successfully");
-            if (stepParam) {
-              router.push("/profile");
-            } else {
-              onNext();
-            }
-          },
-          //   onError: () => {
-          //     toast.error("Error adding Expert experience details");
-          //   },
-        }
-      );
-    }
-
-    if (currentStep === 2) {
-      const formData = new FormData();
-      Object.keys(data).forEach((key) => {
-        if (key === "identification") {
-          // Handle the identification file - it's stored as a single File object, not an array
-          if (data.identification) {
-            formData.append("idImage", data.identification);
-          }
-        } else {
-          formData.append(key, data[key]);
-        }
-      });
-      formData.append("regPercentage", String(completionRate));
-
-      completeProfileSetup(formData, {
+  if (currentStep === 0) {
+    completeProfileSetup(
+      { ...data, regPercentage: completionRate },
+      {
         onSuccess: () => {
-          //   toast.success("Expert other details added successfully");
           if (stepParam) {
             router.push("/profile");
           } else {
-            router.push("/projects");
+            onNext();
           }
         },
-        // onError: () => {
-        //   toast.error("Error adding Expert other details");
-        // },
-      });
+      }
+    );
+  }
+
+  if (currentStep === 1) {
+    const payload = {
+      ...data,
+      socialLinks: {
+        linkedin: data.linkedin,
+        website: data.portfolio,
+      },
+    };
+    completeProfileSetup(
+      { ...payload, regPercentage: completionRate },
+      {
+        onSuccess: () => {
+           if (stepParam) {
+            router.push("/profile");
+          } else {
+            onNext();
+          }
+        },
+      }
+    );
+  }
+
+  if (currentStep === 2) {
+    const formData = new FormData();
+    
+    // Append all fields to FormData
+    Object.keys(data).forEach((key) => {
+      if (key === "identification" || key === "resume") {
+        // Handle file uploads
+        if (data[key]) {
+          const fileFieldName = key === "identification" ? "idImage" : "resume";
+          formData.append(fileFieldName, data[key]);
+        }
+      } else if (key === "role" || key === "preferredIndustry" || key === "skills") {
+        // Handle arrays
+        if (Array.isArray(data[key])) {
+          data[key].forEach((item: string, index: number) => {
+            formData.append(`${key}[${index}]`, item);
+          });
+        }
+      } else if (key === "socialLinks") {
+        // Skip socialLinks as we're handling linkedin and portfolio separately
+        return;
+      } else {
+        // Handle regular fields
+        if (data[key] !== null && data[key] !== undefined) {
+          formData.append(key, data[key]);
+        }
+      }
+    });
+
+    // Add social links if they exist
+    if (data.linkedin) {
+      formData.append("socialLinks[linkedin]", data.linkedin);
     }
-  };
+    if (data.portfolio) {
+      formData.append("socialLinks[website]", data.portfolio);
+    }
+
+    formData.append("regPercentage", String(completionRate));
+
+    completeProfileSetup(formData, {
+      onSuccess: () => {
+        if (stepParam) {
+          router.push("/profile");
+        } else {
+          router.push("/projects");
+        }
+      },
+    });
+  }
+};
+
+  // const onSubmitFinal = (data: any) => {
+  //   let stepRate = 0;
+  //   if (currentStep === 0) stepRate = 30;
+  //   if (currentStep === 1) stepRate = 70;
+  //   if (currentStep === 2) stepRate = 100; // Updated percentages
+
+  //   let completionRate =
+  //     user?.regPercentage && user.regPercentage >= stepRate
+  //       ? user.regPercentage
+  //       : stepRate;
+
+  //   if (currentStep === 0) {
+  //     completeProfileSetup(
+  //       { ...data, regPercentage: completionRate },
+  //       {
+  //         onSuccess: () => {
+  //           if (stepParam) {
+  //             router.push("/profile");
+  //           } else {
+  //             onNext();
+  //           }
+  //         },
+  //       }
+  //     );
+  //   }
+
+  //   if (currentStep === 1) {
+  //     const payload = {
+  //       ...data,
+  //       socialLinks: {
+  //         linkedin: data.linkedin,
+  //         website: data.portfolio,
+  //       },
+  //     };
+  //     completeProfileSetup(
+  //       { ...payload, regPercentage: completionRate },
+  //       {
+  //         onSuccess: () => {
+  //            if (stepParam) {
+  //             router.push("/profile");
+  //           } else {
+  //             onNext();
+  //           }
+  //         },
+  //       }
+  //     );
+  //   }
+
+  //   if (currentStep === 2) {
+  //     const formData = new FormData();
+  //     Object.keys(data).forEach((key) => {
+  //       if (key === "identification" || key === "resume") {
+  //         if (data[key]) {
+  //           formData.append(key === "identification" ? "idImage" : "resume", data[key]);
+  //         }
+  //       } else {
+  //         formData.append(key, data[key]);
+  //       }
+  //     });
+  //     formData.append("regPercentage", String(completionRate));
+
+  //     completeProfileSetup(formData, {
+  //       onSuccess: () => {
+  //         if (stepParam) {
+  //           router.push("/profile");
+  //         } else {
+  //           router.push("/projects");
+  //         }
+  //       },
+  //     });
+  //   }
+  // };
 
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
@@ -174,6 +261,7 @@ const ProfileSetUp = () => {
       yearsOfExperience: storedUser?.yearsOfExperience || "",
       portfolio: storedUser?.socialLinks?.website || "",
       linkedin: storedUser?.socialLinks?.linkedin || "",
+      resume: null, // Reset resume file
       bio: storedUser?.bio || "",
       identityType: storedUser?.identification?.type || "",
       identification: null,
@@ -184,36 +272,6 @@ const ProfileSetUp = () => {
   return (
     <div className="flex flex-col gap-10 pb-20">
       <div className="heading flex items-center gap-[9px] w-full px-14 py-4 bg-[#F8F8F8]">
-        {/* {steps.map((step, idx) => (
-          <div
-            key={idx}
-            onClick={onNext}
-            className="flex items-center gap-2 cursor-pointer"
-          >
-            <div
-              className={`w-6 h-6 rounded-sm flex items-center justify-center text-white text-sm ${
-                idx < currentStep
-                  ? "bg-green-500"
-                  : idx === currentStep
-                  ? "bg-primary"
-                  : "bg-[#878A93]"
-              }`}
-            >
-              {idx < currentStep ? <Check size={16} /> : ""}
-            </div>
-            <span
-              className={
-                idx === currentStep ? "font-semibold" : "text-[#878A93]"
-              }
-            >
-              {step}
-            </span>
-            {idx < steps.length - 1 && (
-              <span className="text-[#878A93]">→</span>
-            )}
-          </div>
-        ))} */}
-
         {steps.map((step, idx) => (
           <div key={idx} className="flex items-center gap-2 select-none">
             <div
