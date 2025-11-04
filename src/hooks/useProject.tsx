@@ -81,14 +81,15 @@ export const useGetProject = (projectId: string) => {
 export const useAcceptDeclineMatch = () => {
 	const queryClient = useQueryClient();
 	const { mutate: acceptOrDecline, isPending } = useMutation({
-		mutationFn: async (data: {
-			response: "accepted" | "declined";
-			projectId: string;
-		}) => {
+		mutationFn: async (data: any) => {
 			try {
 				const response = await axiosClient.put(
 					`/project/${data?.projectId}/invite-response`,
-					{ response: data.response }
+					{
+						response: data.response,
+						cost: data?.cost,
+						dueDate: data?.dueDate,
+					}
 				);
 				if (response.data?.status === false) {
 					throw new Error(

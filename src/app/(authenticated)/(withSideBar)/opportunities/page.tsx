@@ -7,19 +7,46 @@ import {
 	useGetBusinessHire,
 	useGetProjects,
 } from "@/hooks/useProject";
-import { Calendar, Clock, Users2 } from "lucide-react";
+import { Calendar, CalendarIcon, Clock, Users2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useRouter } from "next/navigation";
 import moment from "moment";
+import { Controller, useForm } from "react-hook-form";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { format } from "date-fns";
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar as DatePicker } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+
+type FormValues = {
+	price: number;
+	dueDate: Date | null;
+};
 
 const Opportunities = () => {
 	const [activeTab, setActiveTab] = useState<"admin" | "business">("admin");
 	const [showDeclineModal, setShowDeclineModal] = useState(false);
+	const [showAcceptModal, setShowAcceptModal] = useState(false);
 	const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
 		null
 	);
+	const [project, setProject] = useState<any | null>(null);
+
+	const methods = useForm<FormValues>({
+		defaultValues: {
+			price: 0,
+			dueDate: null,
+		},
+	});
+
+	const { handleSubmit, control, register, formState } = methods;
 
 	const [params, setParams] = useState({ status: "pending" });
 
@@ -31,34 +58,46 @@ const Opportunities = () => {
 	const { acceptOrDeclineHire, isPending: isPendingHire } =
 		useAcceptDeclineHire();
 	const router = useRouter();
+	const [open, setOpen] = useState(false);
 
 	const handleAcceptDecline = (
 		action: "accepted" | "declined",
-		projectId: string
+		projectId: string,
+		price?: number,
+		dueDate?: Date | null
 	) => {
 		if (!projectId) {
 			return;
 		}
-		acceptOrDecline(
-			{ response: action, projectId },
-			{
-				onSuccess: () => {
-					toast.success(`Project ${action} successfully`);
-					if (action === "declined") {
-						router.push("/opportunities");
-						return;
-					}
-					router.push(`/projects/${projectId}`);
-				},
-				onError: () => {
-					toast.error(
-						`Error ${
-							action === "accepted" ? "accepting" : "declining"
-						} project`
-					);
-				},
-			}
-		);
+		const payload: any = {
+			response: action,
+			projectId,
+		};
+		if (action === "accepted") {
+			payload.cost = price;
+			payload.dueDate = dueDate
+				? new Date(dueDate).toISOString()
+				: undefined;
+		}
+		acceptOrDecline(payload, {
+			onSuccess: () => {
+				toast.success(`Project ${action} successfully`);
+				if (action === "declined") {
+					handleConfirmDecline();
+					router.push("/opportunities");
+					return;
+				}
+				setShowAcceptModal(false);
+				router.push(`/projects/${projectId}`);
+			},
+			onError: () => {
+				toast.error(
+					`Error ${
+						action === "accepted" ? "accepting" : "declining"
+					} project`
+				);
+			},
+		});
 	};
 
 	const handleAcceptDeclineHire = (
@@ -89,6 +128,15 @@ const Opportunities = () => {
 			}
 		);
 	};
+
+	const handleConfirm = (
+		action: "accepted" | "declined",
+		projectId: string
+	) =>
+		handleSubmit((data) => {
+			// now you have form data + other arguments
+			handleAcceptDecline(action, projectId, data.price, data.dueDate);
+		});
 
 	const handleDeclineClick = (projectId: string) => {
 		setSelectedProjectId(projectId);
@@ -274,12 +322,12 @@ const Opportunities = () => {
 											<div className="flex gap-4">
 												<Button
 													disabled={isPending}
-													onClick={() =>
-														handleAcceptDecline(
-															"accepted",
-															project.id
-														)
-													}
+													onClick={() => {
+														setProject(project);
+														setShowAcceptModal(
+															true
+														);
+													}}
 													className="bg-primary text-white w-fit text-xs rounded-[14px] px-4 py-6"
 												>
 													{isPending
@@ -435,6 +483,158 @@ const Opportunities = () => {
 							</Button>
 						</div>
 					</div>
+				</DialogContent>
+			</Dialog>
+
+			<Dialog open={showAcceptModal} onOpenChange={setShowAcceptModal}>
+				<DialogContent className="!rounded-3xl">
+					<DialogTitle>Submit Offer</DialogTitle>
+
+					<form
+						onSubmit={() =>
+							handleConfirm(
+								"accepted",
+								selectedProjectId as string
+							)
+						}
+						className="flex flex-col gap-4 mt-2"
+					>
+						{/* Price */}
+						<div className="flex flex-col gap-2">
+							<Label>
+								Price <span className="text-red-600">*</span>
+							</Label>
+							<Input
+								type="number"
+								placeholder="Enter price"
+								className="rounded-[14px] py-6 px-4 border border-[#D1DAEC]"
+								{...register("price", {
+									required: "Price is required",
+									min: {
+										value: 1,
+										message: "Price must be greater than 0",
+									},
+								})}
+							/>
+							{formState.errors.price && (
+								<span className="text-red-500 text-sm">
+									{formState.errors.price.message}
+								</span>
+							)}
+						</div>
+
+						{/* Due Date */}
+						<div className="form-group flex flex-col gap-2">
+							<Label>
+								Due Date <span className="text-red-600">*</span>
+							</Label>
+							<Controller
+								name="dueDate"
+								control={control}
+								rules={{
+									required: "Due date is required",
+									validate: (value) => {
+										if (
+											value &&
+											new Date(value) >
+												project?.data?.dueDate
+										) {
+											return `Due date cannot exceed ${format(
+												project?.data?.dueDate,
+												"PPP"
+											)}`;
+										}
+										return true;
+									},
+								}}
+								render={({ field, fieldState }) => {
+									const handleSelect = (
+										date: Date | undefined
+									) => {
+										field.onChange(date);
+										setOpen(false);
+									};
+
+									return (
+										<>
+											<Popover
+												open={open}
+												onOpenChange={setOpen}
+											>
+												<PopoverTrigger asChild>
+													<Button
+														type="button"
+														variant="outline"
+														className={cn(
+															"w-full justify-start text-left font-normal rounded-[14px] py-6 px-4 border border-[#D1DAEC]",
+															!field.value &&
+																"text-muted-foreground"
+														)}
+													>
+														<CalendarIcon className="mr-2 h-4 w-4" />
+														{field.value
+															? format(
+																	new Date(
+																		field.value
+																	),
+																	"PPP"
+															  )
+															: "Select due date"}
+													</Button>
+												</PopoverTrigger>
+												<PopoverContent
+													className="w-auto p-0"
+													align="start"
+												>
+													<DatePicker
+														mode="single"
+														selected={
+															field.value
+																? new Date(
+																		field.value
+																  )
+																: undefined
+														}
+														onSelect={handleSelect}
+														disabled={(date) =>
+															date >
+															project?.data
+																?.dueDate
+														}
+														initialFocus
+													/>
+												</PopoverContent>
+											</Popover>
+
+											{fieldState.error && (
+												<span className="text-red-500 text-sm mt-1">
+													{fieldState.error.message}
+												</span>
+											)}
+										</>
+									);
+								}}
+							/>
+						</div>
+
+						{/* Buttons */}
+						<div className="flex gap-2 justify-end mt-2">
+							<Button
+								variant="outline"
+								type="button"
+								onClick={() => setShowAcceptModal(false)}
+							>
+								Cancel
+							</Button>
+							<Button
+								variant="default"
+								type="submit"
+								disabled={isPending}
+							>
+								{isPending ? "Submitting..." : "Submit Offer"}
+							</Button>
+						</div>
+					</form>
 				</DialogContent>
 			</Dialog>
 		</div>
