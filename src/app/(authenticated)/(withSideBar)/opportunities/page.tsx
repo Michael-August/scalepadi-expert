@@ -52,7 +52,7 @@ const Opportunities = () => {
 
 	const [user, setUser] = useState<any>();
 
-	const { projects, isLoading } = useGetProjects(params);
+	const { projects, isLoading } = useGetProjects();
 	const { hires, isLoading: isLoadingHires } = useGetBusinessHire();
 	const { acceptOrDecline, isPending } = useAcceptDeclineMatch();
 	const { acceptOrDeclineHire, isPending: isPendingHire } =

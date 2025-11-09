@@ -105,6 +105,10 @@ const ProjectInvitePage = () => {
 		setShowDeclineModal(false);
 	};
 
+	const formattedText = project?.data?.brief
+		.replace(/\\r\\n/g, "<br />")
+		.replace(/\\t/g, "&nbsp;&nbsp;&nbsp;&nbsp;");
+
 	return (
 		<div className="flex flex-col gap-10 pb-20">
 			<div className="flex w-full px-14 py-4 flex-col gap-6">
@@ -112,9 +116,12 @@ const ProjectInvitePage = () => {
 					<span className="font-semibold text-xl text-black">
 						Project Title
 					</span>
-					<span className="text-base text-[#878A93]">
-						{project?.data?.brief}
-					</span>
+					<div
+						className="whitespace-pre-line text-sm text-[#727374] leading-relaxed"
+						dangerouslySetInnerHTML={{
+							__html: formattedText,
+						}}
+					/>
 					<span className="text-base text-[#878A93]">
 						Goal: {project?.data?.goal}
 					</span>

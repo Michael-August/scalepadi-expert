@@ -6,24 +6,24 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Users2,
-  Clock,
-  Church,
-  Download,
-  File,
-  Plus,
-  X,
-  Link as URL,
-  Link2,
+	Users2,
+	Clock,
+	Church,
+	Download,
+	File,
+	Plus,
+	X,
+	Link as URL,
+	Link2,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import {
-  useGetProject,
-  useGetTask,
-  useGetTasksForProject,
-  useSubmitTask,
+	useGetProject,
+	useGetTask,
+	useGetTasksForProject,
+	useSubmitTask,
 } from "@/hooks/useProject";
 import moment from "moment";
 import ProjectSkeleton from "@/components/skeletons/project-details.skeleton";
@@ -33,162 +33,173 @@ import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const ProjectDetails = () => {
-  const [activeTab, setActiveTab] = useState<"projectOverview" | "taskTracker">(
-    "projectOverview"
-  );
-  const { projectId } = useParams();
+	const [activeTab, setActiveTab] = useState<
+		"projectOverview" | "taskTracker"
+	>("projectOverview");
+	const { projectId } = useParams();
 
-  const [taskId, setTaskId] = useState("");
-  const [links, setLinks] = useState<string[]>([]);
-  const [documents, setDocuments] = useState<{ title: string; file: File }[]>(
-    []
-  );
+	const [taskId, setTaskId] = useState("");
+	const [links, setLinks] = useState<string[]>([]);
+	const [documents, setDocuments] = useState<{ title: string; file: File }[]>(
+		[]
+	);
 
-  const [openTaskDeliverablesForm, setOpenTaskDeliverablesForm] =
-    useState(false);
-  const [openTaskSuccessModal, setOpenTaskSuccessModal] = useState(false);
-  const [addLink, setAddLink] = useState(false);
-  const [linkUrl, setLinkUrl] = useState("");
+	const [openTaskDeliverablesForm, setOpenTaskDeliverablesForm] =
+		useState(false);
+	const [openTaskSuccessModal, setOpenTaskSuccessModal] = useState(false);
+	const [addLink, setAddLink] = useState(false);
+	const [linkUrl, setLinkUrl] = useState("");
 
-  const { project, isLoading } = useGetProject(projectId as string);
-  const { tasks, isLoading: isLoadingTasks } = useGetTasksForProject(
-    projectId as string
-  );
-  console.log(project);
-  const { task, isLoading: isLoadingTask } = useGetTask(taskId);
-  const { submitTask, isPending } = useSubmitTask(taskId);
+	const { project, isLoading } = useGetProject(projectId as string);
+	const { tasks, isLoading: isLoadingTasks } = useGetTasksForProject(
+		projectId as string
+	);
+	const { task, isLoading: isLoadingTask } = useGetTask(taskId);
+	const { submitTask, isPending } = useSubmitTask(taskId);
 
-  console.log(task);
-  const handleAddDocument = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files) return;
+	const handleAddDocument = (event: React.ChangeEvent<HTMLInputElement>) => {
+		const files = event.target.files;
+		if (!files) return;
 
-    const newDocs = Array.from(files).map((file) => ({
-      title: file.name,
-      file,
-    }));
+		const newDocs = Array.from(files).map((file) => ({
+			title: file.name,
+			file,
+		}));
 
-    setDocuments((prev) => [...prev, ...newDocs]);
-  };
+		setDocuments((prev) => [...prev, ...newDocs]);
+	};
 
-  const onSubmitTask = (e: any) => {
-    e.preventDefault();
-    if (links.length === 0 && documents.length === 0) {
-      toast.warning("Please add at least one link or document.");
-      return;
-    }
+	const onSubmitTask = (e: any) => {
+		e.preventDefault();
+		if (links.length === 0 && documents.length === 0) {
+			toast.warning("Please add at least one link or document.");
+			return;
+		}
 
-    const formData = new FormData();
-    links.forEach((link, index) =>
-      formData.append(`submission[${index}]`, link)
-    );
-    documents.forEach((doc) => formData.append("files", doc.file));
+		const formData = new FormData();
+		links.forEach((link, index) =>
+			formData.append(`submission[${index}]`, link)
+		);
+		documents.forEach((doc) => formData.append("files", doc.file));
 
-    submitTask(formData, {
-      onSuccess: () => {
-        setOpenTaskDeliverablesForm(false);
-        setOpenTaskSuccessModal(true);
-        setLinks([]);
-        setDocuments([]);
-      },
-      onError: (error) => {
-        toast.error(`Error submitting task: ${error}`);
-      },
-    });
-  };
+		submitTask(formData, {
+			onSuccess: () => {
+				setOpenTaskDeliverablesForm(false);
+				setOpenTaskSuccessModal(true);
+				setLinks([]);
+				setDocuments([]);
+			},
+			onError: (error) => {
+				toast.error(`Error submitting task: ${error}`);
+			},
+		});
+	};
 
-  const LoadingState = () => (
-    <div className="flex flex-col gap-6">
-      <Skeleton className="h-6 w-40" />
-      <Skeleton className="h-4 w-full" />
-      <Skeleton className="h-4 w-5/6" />
-      <Skeleton className="h-4 w-2/3" />
-    </div>
-  );
+	const formattedText = project?.data?.brief
+		.replace(/\\r\\n/g, "<br />")
+		.replace(/\\t/g, "&nbsp;&nbsp;&nbsp;&nbsp;");
 
-  return (
-    <div className="flex w-full flex-col gap-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4 border-b border-[#EDEEF3] pb-4">
-        <div className="heading w-full bg-[#F8F8F8] py-4 px-6 flex items-center gap-2">
-          <span
-            onClick={() => window.history.back()}
-            className="text-[#1746A2AB] text-sm font-medium cursor-pointer hover:underline"
-          >
-            Back to My Projects
-          </span>
-          <span className="text-[#CFD0D4] text-sm">/</span>
-          <span className="text-[#1A1A1A] text-sm font-medium">
-            {project?.data?.title || "Project Details"}
-          </span>
-        </div>
+	const LoadingState = () => (
+		<div className="flex flex-col gap-6">
+			<Skeleton className="h-6 w-40" />
+			<Skeleton className="h-4 w-full" />
+			<Skeleton className="h-4 w-5/6" />
+			<Skeleton className="h-4 w-2/3" />
+		</div>
+	);
 
-        <div className="flex w-full items-center justify-between">
-          {isLoading ? (
-            <Skeleton className="h-16 w-full rounded-xl" />
-          ) : (
-            <div className="flex w-full items-center gap-3">
-              <div className="bg-[#D1F7FF] flex items-center justify-center p-[5.84px] text-[#1A1A1A] text-xs h-[54px] w-[54px] rounded-[11.68px]">
-                {project?.data?.businessId?.name?.trim().split(" ")[0] || "Client"}
-              </div>
-              <div className="flex flex-col gap-2">
-                <span className="text-sm text-[#878A93] ">
-                  {project?.data?.title}
-                </span>
-                <div className="items-center gap-2 flex">
-                  <span className="flex items-center gap-[2px] text-sm text-[#878A93]">
-                    <Users2 className="w-4 h-4" />
-                    Members:{" "}
-                    <span className="text-[#121217]">
-                      {project?.data?.experts?.length ?? 0}
-                    </span>
-                  </span>
-                  <span className="flex items-center gap-[2px] text-sm text-[#878A93]">
-                    <Clock className="w-4 h-4" />
-                    Due:{" "}
-                    <span className="text-[#121217]">
-                      {moment(project?.data?.dueDate).format("MMMM DD")}
-                    </span>
-                  </span>
-                </div>
-              </div>
-              <div className="flex flex-col gap-1">
-                <span className="text-sm text-[#878A93] opacity-0">Hi</span>
-                <div className="items-center gap-1 flex">
-                  <span className="flex items-center gap-[2px] text-sm text-[#878A93]">
-                    <Church className="w-4 h-4" />
-                    Status:{" "}
-                    <span className="text-[#121217] capitalize">
-                      {project?.data?.status || "N/A"}
-                    </span>
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+	return (
+		<div className="flex w-full flex-col gap-6">
+			{/* Header */}
+			<div className="flex flex-col gap-4 border-b border-[#EDEEF3] pb-4">
+				<div className="heading w-full bg-[#F8F8F8] py-4 px-6 flex items-center gap-2">
+					<span
+						onClick={() => window.history.back()}
+						className="text-[#1746A2AB] text-sm font-medium cursor-pointer hover:underline"
+					>
+						Back to My Projects
+					</span>
+					<span className="text-[#CFD0D4] text-sm">/</span>
+					<span className="text-[#1A1A1A] text-sm font-medium">
+						{project?.data?.title || "Project Details"}
+					</span>
+				</div>
 
-      {/* Tabs */}
-      <div className="project-details w-full lg:w-[895px] pb-10">
-        <div className="tab pt-2 w-1/2 flex items-center gap-5 bg-[#F9FAFB] rounded-t-2xl">
-          {["projectOverview", "taskTracker"].map((tab) => (
-            <div
-              key={tab}
-              onClick={() => setActiveTab(tab as any)}
-              className={`flex cursor-pointer w-full items-center justify-center border-b-2 pb-3 text-sm transition-colors ${
-                activeTab === tab
-                  ? "border-[#3A96E8] text-[#3A96E8]"
-                  : "border-transparent text-[#727374] hover:text-[#3A96E8]"
-              }`}
-            >
-              {tab === "projectOverview" ? "Project Overview" : "Task Tracker"}
-            </div>
-          ))}
-        </div>
+				<div className="flex w-full items-center justify-between">
+					{isLoading ? (
+						<Skeleton className="h-16 w-full rounded-xl" />
+					) : (
+						<div className="flex w-full items-center gap-3">
+							<div className="bg-[#D1F7FF] flex items-center justify-center p-[5.84px] text-[#1A1A1A] text-xs h-[54px] w-[54px] rounded-[11.68px]">
+								{project?.data?.businessId?.name
+									?.trim()
+									.split(" ")[0] || "Client"}
+							</div>
+							<div className="flex flex-col gap-2">
+								<span className="text-sm text-[#878A93] ">
+									{project?.data?.title}
+								</span>
+								<div className="items-center gap-2 flex">
+									<span className="flex items-center gap-[2px] text-sm text-[#878A93]">
+										<Users2 className="w-4 h-4" />
+										Members:{" "}
+										<span className="text-[#121217]">
+											{project?.data?.experts?.length ??
+												0}
+										</span>
+									</span>
+									<span className="flex items-center gap-[2px] text-sm text-[#878A93]">
+										<Clock className="w-4 h-4" />
+										Due:{" "}
+										<span className="text-[#121217]">
+											{moment(
+												project?.data?.dueDate
+											).format("MMMM DD")}
+										</span>
+									</span>
+								</div>
+							</div>
+							<div className="flex flex-col gap-1">
+								<span className="text-sm text-[#878A93] opacity-0">
+									Hi
+								</span>
+								<div className="items-center gap-1 flex">
+									<span className="flex items-center gap-[2px] text-sm text-[#878A93]">
+										<Church className="w-4 h-4" />
+										Status:{" "}
+										<span className="text-[#121217] capitalize">
+											{project?.data?.status || "N/A"}
+										</span>
+									</span>
+								</div>
+							</div>
+						</div>
+					)}
+				</div>
+			</div>
 
-        {/* Project Overview */}
-        {/* {activeTab === "projectOverview" && (
+			{/* Tabs */}
+			<div className="project-details w-full lg:w-[895px] pb-10">
+				<div className="tab pt-2 w-1/2 flex items-center gap-5 bg-[#F9FAFB] rounded-t-2xl">
+					{["projectOverview", "taskTracker"].map((tab) => (
+						<div
+							key={tab}
+							onClick={() => setActiveTab(tab as any)}
+							className={`flex cursor-pointer w-full items-center justify-center border-b-2 pb-3 text-sm transition-colors ${
+								activeTab === tab
+									? "border-[#3A96E8] text-[#3A96E8]"
+									: "border-transparent text-[#727374] hover:text-[#3A96E8]"
+							}`}
+						>
+							{tab === "projectOverview"
+								? "Project Overview"
+								: "Task Tracker"}
+						</div>
+					))}
+				</div>
+
+				{/* Project Overview */}
+				{/* {activeTab === "projectOverview" && (
           <div className="w-full border border-[#F2F2F2] rounded-2xl p-6 flex flex-col gap-6 bg-white">
             {isLoading ? (
               <ProjectSkeleton />
@@ -247,41 +258,45 @@ const ProjectDetails = () => {
           </div>
         )} */}
 
-        {activeTab === "projectOverview" && (
-          <div className="w-full border border-[#F2F2F2] rounded-2xl p-4 my-2 flex flex-col gap-6 bg-white">
-            {isLoading ? (
-              <ProjectSkeleton />
-            ) : (
-              <>
-                <div className="flex flex-col gap-2">
-                  <span className="text-[#1A1A1A] text-sm font-normal">
-                    Project Brief
-                  </span>
-                  <span className="text-sm text-[#727374]">
-                    {project?.data?.brief || "No project brief provided."}
-                  </span>
-                </div>
+				{activeTab === "projectOverview" && (
+					<div className="w-full border border-[#F2F2F2] rounded-2xl p-4 my-2 flex flex-col gap-6 bg-white">
+						{isLoading ? (
+							<ProjectSkeleton />
+						) : (
+							<>
+								<div className="flex flex-col gap-2">
+									<span className="text-[#1A1A1A] text-sm font-normal">
+										Project Brief
+									</span>
+									<div
+										className="whitespace-pre-line text-sm text-[#727374] leading-relaxed"
+										dangerouslySetInnerHTML={{
+											__html: formattedText,
+										}}
+									/>
+								</div>
 
-                <div className="flex flex-col gap-2">
-                  <span className="text-[#1A1A1A] text-sm font-normal">
-                    Goal
-                  </span>
-                  <span className="text-sm text-[#727374]">
-                    {project?.data?.goal || "No goal specified."}
-                  </span>
-                </div>
+								<div className="flex flex-col gap-2">
+									<span className="text-[#1A1A1A] text-sm font-normal">
+										Goal
+									</span>
+									<span className="text-sm text-[#727374]">
+										{project?.data?.goal ||
+											"No goal specified."}
+									</span>
+								</div>
 
-                <div className="flex flex-col gap-2">
-                  <span className="text-[#1A1A1A] text-sm font-normal">
-                    Challenge
-                  </span>
-                  <span className="text-sm text-[#727374]">
-                    {project?.data?.description ||
-                      "No challenge description provided."}
-                  </span>
-                </div>
+								<div className="flex flex-col gap-2">
+									<span className="text-[#1A1A1A] text-sm font-normal">
+										Challenge
+									</span>
+									<span className="text-sm text-[#727374]">
+										{project?.data?.description ||
+											"No challenge description provided."}
+									</span>
+								</div>
 
-                {/* <div className="flex flex-col gap-2">
+								{/* <div className="flex flex-col gap-2">
           <span className="text-[#1A1A1A] text-sm font-normal">
             Metrics to Influence
           </span>
@@ -293,43 +308,48 @@ const ProjectDetails = () => {
           </ul>
         </div> */}
 
-                {project?.data?.resources?.length > 0 && (
-                  <div className="flex flex-col gap-2">
-                    <span className="text-[#1A1A1A] text-sm font-normal">
-                      Resources
-                    </span>
-                    <div className="flex items-center gap-[10px] flex-wrap">
-                      {project?.data?.resources.map(
-                        (resourceUrl: string, idx: number) => (
-                          <div
-                            key={idx}
-                            className="flex items-center gap-2 p-1 bg-[#F7F9F9] rounded-3xl px-4"
-                          >
-                            <Image
-                              src={resourceUrl}
-                              alt={`Resource ${idx + 1}`}
-                              width={18}
-                              height={18}
-                              className="w-8 h-8 rounded-lg object-cover border"
-                            />
-                            <span className="text-[#878A93] text-xs">
-                              Resource {idx + 1}
-                            </span>
-                            <a
-                              href={resourceUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              <Download className="w-4 h-4 text-[#878A93] cursor-pointer hover:text-primary" />
-                            </a>
-                          </div>
-                        )
-                      )}
-                    </div>
-                  </div>
-                )}
+								{project?.data?.resources?.length > 0 && (
+									<div className="flex flex-col gap-2">
+										<span className="text-[#1A1A1A] text-sm font-normal">
+											Resources
+										</span>
+										<div className="flex items-center gap-[10px] flex-wrap">
+											{project?.data?.resources.map(
+												(
+													resourceUrl: string,
+													idx: number
+												) => (
+													<div
+														key={idx}
+														className="flex items-center gap-2 p-1 bg-[#F7F9F9] rounded-3xl px-4"
+													>
+														<Image
+															src={resourceUrl}
+															alt={`Resource ${
+																idx + 1
+															}`}
+															width={18}
+															height={18}
+															className="w-8 h-8 rounded-lg object-cover border"
+														/>
+														<span className="text-[#878A93] text-xs">
+															Resource {idx + 1}
+														</span>
+														<a
+															href={resourceUrl}
+															target="_blank"
+															rel="noopener noreferrer"
+														>
+															<Download className="w-4 h-4 text-[#878A93] cursor-pointer hover:text-primary" />
+														</a>
+													</div>
+												)
+											)}
+										</div>
+									</div>
+								)}
 
-                {/* <div className="flex flex-col gap-2">
+								{/* <div className="flex flex-col gap-2">
           <span className="text-[#1A1A1A] text-sm font-normal">
             Deliverables
           </span>
@@ -358,220 +378,241 @@ const ProjectDetails = () => {
             {project?.data?.paymentStatus || "Not specified"}
           </span>
         </div> */}
-              </>
-            )}
-          </div>
-        )}
+							</>
+						)}
+					</div>
+				)}
 
-        {/* Task Tracker */}
-        {activeTab === "taskTracker" && (
-          <div className="w-full border border-[#F2F2F2] rounded-2xl p-6 flex flex-col gap-6 bg-white">
-            <div className="flex flex-col gap-2 pb-5 border-b border-[#F2F2F2]">
-              <span className="text-[#1A1A1A] text-sm font-medium">
-                Tasks & Deliverables
-              </span>
-              <span className="text-[#727374] text-sm">
-                Here’s your personalized task plan for this project. Complete
-                each deliverable, upload your work, and mark it done when ready.
-              </span>
-            </div>
+				{/* Task Tracker */}
+				{activeTab === "taskTracker" && (
+					<div className="w-full border border-[#F2F2F2] rounded-2xl p-6 flex flex-col gap-6 bg-white">
+						<div className="flex flex-col gap-2 pb-5 border-b border-[#F2F2F2]">
+							<span className="text-[#1A1A1A] text-sm font-medium">
+								Tasks & Deliverables
+							</span>
+							<span className="text-[#727374] text-sm">
+								Here’s your personalized task plan for this
+								project. Complete each deliverable, upload your
+								work, and mark it done when ready.
+							</span>
+						</div>
 
-            {isLoadingTasks ? (
-              <LoadingState />
-            ) : tasks?.data?.length === 0 ? (
-              <div className="text-center text-[#878A93] py-10 text-sm">
-                No tasks available yet.
-              </div>
-            ) : (
-              tasks?.data?.map((task: any, index: number) => (
-                <div
-                  key={index}
-                  className="bg-[#FBFCFC] p-3 rounded-2xl flex flex-col gap-4 border border-[#F3F4F6]"
-                >
-                  <span className="text-[#878A93] text-sm font-medium">
-                    Task {index + 1}:{" "}
-                    <span className="text-[#1A1A1A]">{task.title}</span>
-                  </span>
-                  <span className="text-[#727374] text-sm">
-                    {task.description}
-                  </span>
+						{isLoadingTasks ? (
+							<LoadingState />
+						) : tasks?.data?.length === 0 ? (
+							<div className="text-center text-[#878A93] py-10 text-sm">
+								No tasks available yet.
+							</div>
+						) : (
+							tasks?.data?.map((task: any, index: number) => (
+								<div
+									key={index}
+									className="bg-[#FBFCFC] p-3 rounded-2xl flex flex-col gap-4 border border-[#F3F4F6]"
+								>
+									<span className="text-[#878A93] text-sm font-medium">
+										Task {index + 1}:{" "}
+										<span className="text-[#1A1A1A]">
+											{task.title}
+										</span>
+									</span>
+									<span className="text-[#727374] text-sm">
+										{task.description}
+									</span>
 
-                  <Button
-                    onClick={() => {
-                      setTaskId(task.id);
-                      setOpenTaskDeliverablesForm(true);
-                    }}
-                    variant="outline"
-                    className="w-fit text-xs rounded-lg"
-                  >
-                    Add Task Deliverables
-                  </Button>
-                </div>
-              ))
-            )}
-          </div>
-        )}
-      </div>
+									<Button
+										onClick={() => {
+											setTaskId(task.id);
+											setOpenTaskDeliverablesForm(true);
+										}}
+										variant="outline"
+										className="w-fit text-xs rounded-lg"
+									>
+										Add Task Deliverables
+									</Button>
+								</div>
+							))
+						)}
+					</div>
+				)}
+			</div>
 
-      {/* Task Deliverables Modal */}
-      <Dialog
-        open={openTaskDeliverablesForm}
-        onOpenChange={setOpenTaskDeliverablesForm}
-      >
-        <DialogContent className="!rounded-3xl">
-          <DialogTitle>Task Deliverables Update</DialogTitle>
-          {isLoadingTask ? (
-            <TaskDeliverableSkeleton />
-          ) : (
-            <form onSubmit={onSubmitTask} className="flex flex-col gap-6 mt-5">
-              <div className="flex flex-col gap-2">
-                <Label>Task Title</Label>
-                <Input
-                  value={task?.data?.title || ""}
-                  disabled
-                  className="rounded-[14px]"
-                />
-              </div>
+			{/* Task Deliverables Modal */}
+			<Dialog
+				open={openTaskDeliverablesForm}
+				onOpenChange={setOpenTaskDeliverablesForm}
+			>
+				<DialogContent className="!rounded-3xl">
+					<DialogTitle>Task Deliverables Update</DialogTitle>
+					{isLoadingTask ? (
+						<TaskDeliverableSkeleton />
+					) : (
+						<form
+							onSubmit={onSubmitTask}
+							className="flex flex-col gap-6 mt-5"
+						>
+							<div className="flex flex-col gap-2">
+								<Label>Task Title</Label>
+								<Input
+									value={task?.data?.title || ""}
+									disabled
+									className="rounded-[14px]"
+								/>
+							</div>
 
-              <div className="flex flex-col gap-2">
-                <Label>Description</Label>
-                <Textarea
-                  value={task?.data?.description || ""}
-                  disabled
-                  className="rounded-[14px]"
-                />
-              </div>
+							<div className="flex flex-col gap-2">
+								<Label>Description</Label>
+								<Textarea
+									value={task?.data?.description || ""}
+									disabled
+									className="rounded-[14px]"
+								/>
+							</div>
 
-              <div className="flex flex-col gap-2">
-                <Label>Add Link</Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setAddLink(true)}
-                  className="w-fit text-xs rounded-lg"
-                >
-                  <Plus className="w-4 h-4 mr-1" /> Add task link
-                </Button>
-              </div>
+							<div className="flex flex-col gap-2">
+								<Label>Add Link</Label>
+								<Button
+									type="button"
+									variant="outline"
+									onClick={() => setAddLink(true)}
+									className="w-fit text-xs rounded-lg"
+								>
+									<Plus className="w-4 h-4 mr-1" /> Add task
+									link
+								</Button>
+							</div>
 
-              {addLink && (
-                <div className="flex gap-2 items-center">
-                  <Input
-                    value={linkUrl}
-                    onChange={(e) => setLinkUrl(e.target.value)}
-                    placeholder="https://"
-                    className="rounded-[14px]"
-                  />
-                  <Button
-                    type="button"
-                    onClick={() => {
-                      setLinks([...links, linkUrl]);
-                      setAddLink(false);
-                      setLinkUrl("");
-                    }}
-                  >
-                    Add
-                  </Button>
-                </div>
-              )}
+							{addLink && (
+								<div className="flex gap-2 items-center">
+									<Input
+										value={linkUrl}
+										onChange={(e) =>
+											setLinkUrl(e.target.value)
+										}
+										placeholder="https://"
+										className="rounded-[14px]"
+									/>
+									<Button
+										type="button"
+										onClick={() => {
+											setLinks([...links, linkUrl]);
+											setAddLink(false);
+											setLinkUrl("");
+										}}
+									>
+										Add
+									</Button>
+								</div>
+							)}
 
-              <div className="flex flex-wrap gap-2">
-                {links.map((link, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center gap-2 border p-2 rounded-lg text-xs"
-                  >
-                    <URL className="w-4 h-4" />
-                    <span>{link}</span>
-                    <X
-                      className="cursor-pointer"
-                      onClick={() =>
-                        setLinks(links.filter((item) => item !== link))
-                      }
-                    />
-                  </div>
-                ))}
-              </div>
+							<div className="flex flex-wrap gap-2">
+								{links.map((link, i) => (
+									<div
+										key={i}
+										className="flex items-center gap-2 border p-2 rounded-lg text-xs"
+									>
+										<URL className="w-4 h-4" />
+										<span>{link}</span>
+										<X
+											className="cursor-pointer"
+											onClick={() =>
+												setLinks(
+													links.filter(
+														(item) => item !== link
+													)
+												)
+											}
+										/>
+									</div>
+								))}
+							</div>
 
-              <div className="flex flex-col gap-2">
-                <Label>Task Documents</Label>
-                <label
-                  htmlFor="task-upload"
-                  className="w-fit border p-2 rounded-lg cursor-pointer text-xs"
-                >
-                  <Plus className="w-4 h-4 inline" /> Add document
-                </label>
-                <input
-                  id="task-upload"
-                  type="file"
-                  className="hidden"
-                  multiple
-                  onChange={handleAddDocument}
-                />
-              </div>
+							<div className="flex flex-col gap-2">
+								<Label>Task Documents</Label>
+								<label
+									htmlFor="task-upload"
+									className="w-fit border p-2 rounded-lg cursor-pointer text-xs"
+								>
+									<Plus className="w-4 h-4 inline" /> Add
+									document
+								</label>
+								<input
+									id="task-upload"
+									type="file"
+									className="hidden"
+									multiple
+									onChange={handleAddDocument}
+								/>
+							</div>
 
-              {documents.length > 0 && (
-                <div className="flex flex-wrap gap-3">
-                  {documents.map((doc, i) => (
-                    <div
-                      key={i}
-                      className="flex items-center gap-2 border p-2 rounded-lg text-xs"
-                    >
-                      <File className="w-4 h-4" />
-                      {doc.title}
-                      <X
-                        className="cursor-pointer"
-                        onClick={() =>
-                          setDocuments(documents.filter((d) => d !== doc))
-                        }
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
+							{documents.length > 0 && (
+								<div className="flex flex-wrap gap-3">
+									{documents.map((doc, i) => (
+										<div
+											key={i}
+											className="flex items-center gap-2 border p-2 rounded-lg text-xs"
+										>
+											<File className="w-4 h-4" />
+											{doc.title}
+											<X
+												className="cursor-pointer"
+												onClick={() =>
+													setDocuments(
+														documents.filter(
+															(d) => d !== doc
+														)
+													)
+												}
+											/>
+										</div>
+									))}
+								</div>
+							)}
 
-              <Button
-                type="submit"
-                className="bg-primary text-white w-fit rounded-[14px]"
-                disabled={isPending}
-              >
-                {isPending ? "Submitting..." : "Submit Task"}
-              </Button>
-            </form>
-          )}
-        </DialogContent>
-      </Dialog>
+							<Button
+								type="submit"
+								className="bg-primary text-white w-fit rounded-[14px]"
+								disabled={isPending}
+							>
+								{isPending ? "Submitting..." : "Submit Task"}
+							</Button>
+						</form>
+					)}
+				</DialogContent>
+			</Dialog>
 
-      {/* Success Modal */}
-      <Dialog
-        open={openTaskSuccessModal}
-        onOpenChange={setOpenTaskSuccessModal}
-      >
-        <DialogContent className="!rounded-3xl">
-          <div className="flex flex-col items-center gap-6">
-            <Image
-              src="/icons/success-check.svg"
-              alt="success"
-              width={80}
-              height={80}
-            />
-            <div className="text-center">
-              <p className="text-[32px] font-bold text-[#0E1426]">Well Done!</p>
-              <p className="text-[#0E1426] text-lg mt-2">
-                Project task submitted successfully. Kindly wait for feedback.
-              </p>
-            </div>
-            <Button
-              onClick={() => setOpenTaskSuccessModal(false)}
-              className="bg-[#1A1A1A] text-[#FCCE37] w-fit rounded-[14px]"
-            >
-              Okay
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
+			{/* Success Modal */}
+			<Dialog
+				open={openTaskSuccessModal}
+				onOpenChange={setOpenTaskSuccessModal}
+			>
+				<DialogContent className="!rounded-3xl">
+					<div className="flex flex-col items-center gap-6">
+						<Image
+							src="/icons/success-check.svg"
+							alt="success"
+							width={80}
+							height={80}
+						/>
+						<div className="text-center">
+							<p className="text-[32px] font-bold text-[#0E1426]">
+								Well Done!
+							</p>
+							<p className="text-[#0E1426] text-lg mt-2">
+								Project task submitted successfully. Kindly wait
+								for feedback.
+							</p>
+						</div>
+						<Button
+							onClick={() => setOpenTaskSuccessModal(false)}
+							className="bg-[#1A1A1A] text-[#FCCE37] w-fit rounded-[14px]"
+						>
+							Okay
+						</Button>
+					</div>
+				</DialogContent>
+			</Dialog>
+		</div>
+	);
 };
 
 export default ProjectDetails;
