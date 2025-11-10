@@ -57,12 +57,12 @@ const ProjectInvitePage = () => {
 			response: action,
 			projectId,
 		};
-		if (action === "accepted") {
-			payload.cost = price;
-			payload.dueDate = dueDate
-				? new Date(dueDate).toISOString()
-				: undefined;
-		}
+		// if (action === "accepted") {
+		// 	payload.cost = price;
+		// 	payload.dueDate = dueDate
+		// 		? new Date(dueDate).toISOString()
+		// 		: undefined;
+		// }
 		acceptOrDecline(payload, {
 			onSuccess: () => {
 				toast.success(`Project ${action} successfully`);
@@ -201,7 +201,9 @@ const ProjectInvitePage = () => {
 				<div className="flex gap-4">
 					<Button
 						disabled={isPending}
-						onClick={() => setShowAcceptModal(true)}
+						onClick={() =>
+							handleAcceptDecline("accepted", projectId as string)
+						}
 						className="bg-primary text-white w-fit text-xs rounded-[14px] px-4 py-6"
 					>
 						{isPending ? "Accepting match..." : "Accept Match"}

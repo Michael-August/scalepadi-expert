@@ -124,6 +124,52 @@ export const useAcceptDeclineMatch = () => {
 	return { acceptOrDecline, isPending };
 };
 
+export const useAcceptDeclineTask = (projectId: string) => {
+	const queryClient = useQueryClient();
+	const { mutate: acceptOrDeclineTask, isPending } = useMutation({
+		mutationFn: async (data: any) => {
+			try {
+				const response = await axiosClient.put(
+					`/task/respond/${data?.taskId}`,
+					{
+						status: data.status,
+						cost: Number(data?.cost),
+						dueDate: data?.dueDate,
+					}
+				);
+				if (response.data?.status === false) {
+					throw new Error(
+						response.data?.message ||
+							`Failed to ${data.response} match`
+					);
+				}
+				return response.data;
+			} catch (error: any) {
+				if (error instanceof AxiosError) {
+					toast.error(
+						error.response?.data?.message ||
+							`Failed to ${data.response} match`
+					);
+				} else if (error instanceof Error) {
+					toast.error(error.message);
+				} else {
+					toast.error(
+						`An unexpected error occured while trying to ${data.response} match`
+					);
+				}
+
+				throw error;
+			}
+		},
+		onSuccess: (data) => {
+			toast.success(data.message);
+			queryClient.invalidateQueries({ queryKey: ["tasks", projectId] });
+		},
+	});
+
+	return { acceptOrDeclineTask, isPending };
+};
+
 export const useGetTasksForProject = (projectId: string) => {
 	const { data, isLoading } = useQuery({
 		queryKey: ["tasks", projectId],

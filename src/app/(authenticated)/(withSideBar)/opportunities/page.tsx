@@ -52,7 +52,7 @@ const Opportunities = () => {
 
 	const [user, setUser] = useState<any>();
 
-	const { projects, isLoading } = useGetProjects();
+	const { projects, isLoading } = useGetProjects(params);
 	const { hires, isLoading: isLoadingHires } = useGetBusinessHire();
 	const { acceptOrDecline, isPending } = useAcceptDeclineMatch();
 	const { acceptOrDeclineHire, isPending: isPendingHire } =
@@ -73,12 +73,12 @@ const Opportunities = () => {
 			response: action,
 			projectId,
 		};
-		if (action === "accepted") {
-			payload.cost = price;
-			payload.dueDate = dueDate
-				? new Date(dueDate).toISOString()
-				: undefined;
-		}
+		// if (action === "accepted") {
+		// 	payload.cost = price;
+		// 	payload.dueDate = dueDate
+		// 		? new Date(dueDate).toISOString()
+		// 		: undefined;
+		// }
 		acceptOrDecline(payload, {
 			onSuccess: () => {
 				toast.success(`Project ${action} successfully`);
@@ -166,8 +166,6 @@ const Opportunities = () => {
 	useEffect(() => {
 		setParams({ status: activeTab === "admin" ? "pending" : "completed" });
 	}, [activeTab]);
-
-	//   console.log(projects.data)
 
 	return (
 		<div className="w-full flex flex-col gap-4 lg:w-[919px]">
@@ -297,9 +295,20 @@ const Opportunities = () => {
 												<span className="text-[#1A1A1A] text-sm">
 													Project brief
 												</span>
-												<span className="text-[#727374] text-sm">
-													{project?.brief || "N/A"}
-												</span>
+												<div
+													className="whitespace-pre-line text-sm text-[#727374] leading-relaxed"
+													dangerouslySetInnerHTML={{
+														__html: project?.brief
+															?.replace(
+																/\\r\\n/g,
+																"<br />"
+															)
+															.replace(
+																/\\t/g,
+																"&nbsp;&nbsp;&nbsp;&nbsp;"
+															),
+													}}
+												/>
 											</div>
 											<div className="flex flex-col gap-2">
 												<span className="text-[#1A1A1A] text-sm">
@@ -318,16 +327,16 @@ const Opportunities = () => {
 
 										{project?.experts?.some(
 											(expert: any) =>
-												expert.id.id === user.id &&
+												expert.id.id === user?.id &&
 												expert.status === "pending"
 										) && (
 											<div className="flex gap-4">
 												<Button
 													disabled={isPending}
 													onClick={() => {
-														setProject(project);
-														setShowAcceptModal(
-															true
+														handleAcceptDecline(
+															"accepted",
+															project.id
 														);
 													}}
 													className="bg-primary text-white w-fit text-xs rounded-[14px] px-4 py-6"
