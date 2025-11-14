@@ -18,6 +18,14 @@ import {
 } from "@/components/ui/popover";
 import { CalendarIcon } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
+import {
+	Select,
+	SelectContent,
+	SelectGroup,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 
 type FormValues = {
 	price: number;
@@ -223,10 +231,27 @@ const ProjectInvitePage = () => {
 				<DialogContent className="!rounded-3xl">
 					<DialogTitle>Decline Opportunity</DialogTitle>
 					<div className="flex flex-col gap-4 mt-2">
-						<span className="text-sm text-[#878A93]">
-							Are you sure you want to decline this opportunity?
-							This action cannot be undone.
-						</span>
+						<div className="form-group flex flex-col gap-2">
+							<Label>
+								Select Reason for Rejection{" "}
+								<span className="text-red-600">*</span>
+							</Label>
+							<Select>
+								<SelectTrigger className="w-full rounded-[14px] py-6 px-4 border border-[#D1DAEC]">
+									<SelectValue placeholder="Select Reason" />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectGroup>
+										<SelectItem value="expert">
+											Lack of clarity
+										</SelectItem>
+										<SelectItem value="business">
+											Not interested
+										</SelectItem>
+									</SelectGroup>
+								</SelectContent>
+							</Select>
+						</div>
 						<div className="flex gap-2 justify-end">
 							<Button
 								variant="outline"

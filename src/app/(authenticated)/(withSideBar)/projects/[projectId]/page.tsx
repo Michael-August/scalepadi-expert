@@ -43,6 +43,14 @@ import {
 import { CalendarIcon } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import Modal from "@/components/modal";
+import {
+	Select,
+	SelectContent,
+	SelectGroup,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 
 type FormValues = {
 	price: number;
@@ -68,11 +76,13 @@ const ProjectDetails = () => {
 		},
 	});
 
+	const [reason, setReason] = useState("");
+
 	const { handleSubmit, control, register, formState } = methods;
 
 	const [openTaskDeliverablesForm, setOpenTaskDeliverablesForm] =
 		useState(false);
-	const [showDeclineModal, setShowDeclineModal] = useState(false);
+	const [showDeclineModal, setShowDeclineModal] = useState(true);
 	const [showAcceptModal, setShowAcceptModal] = useState(false);
 	const [openTaskSuccessModal, setOpenTaskSuccessModal] = useState(false);
 	const [addLink, setAddLink] = useState(false);
@@ -150,6 +160,10 @@ const ProjectDetails = () => {
 			payload.dueDate = dueDate
 				? new Date(dueDate).toISOString()
 				: undefined;
+		}
+
+		if (action === "declined") {
+			payload.declineReason = reason;
 		}
 		acceptOrDeclineTask(payload, {
 			onSuccess: () => {
@@ -752,10 +766,30 @@ const ProjectDetails = () => {
 				<DialogContent className="!rounded-3xl">
 					<DialogTitle>Decline Opportunity</DialogTitle>
 					<div className="flex flex-col gap-4 mt-2">
-						<span className="text-sm text-[#878A93]">
-							Are you sure you want to decline this opportunity?
-							This action cannot be undone.
-						</span>
+						<div className="form-group flex flex-col gap-2">
+							<Label>
+								Select Reason for Rejection{" "}
+								<span className="text-red-600">*</span>
+							</Label>
+							<Select
+								value={reason}
+								onValueChange={(val) => setReason(val)}
+							>
+								<SelectTrigger className="w-full rounded-[14px] py-6 px-4 border border-[#D1DAEC]">
+									<SelectValue placeholder="Select Reason" />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectGroup>
+										<SelectItem value="Lack of clarity">
+											Lack of clarity
+										</SelectItem>
+										<SelectItem value="Not interested">
+											Not interested
+										</SelectItem>
+									</SelectGroup>
+								</SelectContent>
+							</Select>
+						</div>
 						<div className="flex gap-2 justify-end">
 							<Button
 								variant="outline"
