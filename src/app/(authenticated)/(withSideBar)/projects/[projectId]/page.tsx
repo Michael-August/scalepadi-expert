@@ -82,7 +82,7 @@ const ProjectDetails = () => {
 
 	const [openTaskDeliverablesForm, setOpenTaskDeliverablesForm] =
 		useState(false);
-	const [showDeclineModal, setShowDeclineModal] = useState(true);
+	const [showDeclineModal, setShowDeclineModal] = useState(false);
 	const [showAcceptModal, setShowAcceptModal] = useState(false);
 	const [openTaskSuccessModal, setOpenTaskSuccessModal] = useState(false);
 	const [addLink, setAddLink] = useState(false);
