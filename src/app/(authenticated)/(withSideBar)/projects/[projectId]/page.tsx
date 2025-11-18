@@ -404,6 +404,43 @@ const ProjectDetails = () => {
 											"No challenge description provided."}
 									</span>
 								</div>
+								<div className="flex flex-col gap-2">
+									<span className="text-[#1A1A1A] text-sm font-normal">
+										Kind of Expert needed
+									</span>
+									<span className="text-sm text-[#727374]">
+										{project?.data?.kindOfExperts ||
+											"No Prefered kind of expert provided."}
+									</span>
+								</div>
+								<div className="flex flex-col gap-2">
+									<span className="text-[#1A1A1A] text-sm font-normal">
+										Location
+									</span>
+									<span className="text-sm text-[#727374]">
+										{project?.data?.location ||
+											"No Prefered location provided."}
+									</span>
+								</div>
+								<div className="flex flex-col gap-2">
+									<span className="text-[#1A1A1A] text-sm font-normal">
+										Working Preference
+									</span>
+									<span className="text-sm text-[#727374]">
+										{project?.data?.workingPreference ||
+											"No Prefered working preference provided."}
+									</span>
+								</div>
+								<div className="flex flex-col gap-2">
+									<span className="text-[#1A1A1A] text-sm font-normal">
+										Expert experience level
+									</span>
+									<span className="text-sm text-[#727374]">
+										{project?.data
+											?.expertsExperienceLevel ||
+											"No Prefered experience level provided."}
+									</span>
+								</div>
 
 								{/* <div className="flex flex-col gap-2">
           <span className="text-[#1A1A1A] text-sm font-normal">

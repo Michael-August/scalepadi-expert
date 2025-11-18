@@ -228,6 +228,23 @@ const ProjectList = ({
 								}}
 							/>
 						</div>
+
+						<div className="flex flex-col gap-1">
+							<span className="text-sm text-[#6B7280] font-medium">
+								Location:{" "}
+							</span>
+							<span className="text-sm text-[#121217] font-semibold">
+								{project.location || "—"}
+							</span>
+						</div>
+						<div className="flex flex-col gap-1">
+							<span className="text-sm text-[#6B7280] font-medium">
+								Working Preference:{" "}
+							</span>
+							<span className="text-sm text-[#121217] font-semibold">
+								{project.workingPreference || "—"}
+							</span>
+						</div>
 					</div>
 
 					{/* Bottom row: left-aligned CTA */}
