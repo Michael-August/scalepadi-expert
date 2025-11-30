@@ -21,6 +21,7 @@ import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import {
 	useAcceptDeclineTask,
+	useCreateNewTask,
 	useGetProject,
 	useGetTask,
 	useGetTasksForProject,
@@ -53,8 +54,9 @@ import {
 } from "@/components/ui/select";
 
 type FormValues = {
-	price: number;
-	dueDate: Date | null;
+	cost: number;
+	description: string;
+	title: string;
 };
 
 const ProjectDetails = () => {
@@ -71,8 +73,9 @@ const ProjectDetails = () => {
 
 	const methods = useForm<FormValues>({
 		defaultValues: {
-			price: 0,
-			dueDate: null,
+			cost: 0,
+			description: "",
+			title: "",
 		},
 	});
 
@@ -82,6 +85,7 @@ const ProjectDetails = () => {
 
 	const [openTaskDeliverablesForm, setOpenTaskDeliverablesForm] =
 		useState(false);
+	const [openAddNewTaskForm, setOpenAddNewTaskForm] = useState(false);
 	const [showDeclineModal, setShowDeclineModal] = useState(false);
 	const [showAcceptModal, setShowAcceptModal] = useState(false);
 	const [openTaskSuccessModal, setOpenTaskSuccessModal] = useState(false);
@@ -101,6 +105,10 @@ const ProjectDetails = () => {
 
 	const { acceptOrDeclineTask, isPending: isAcceptingDecliningTask } =
 		useAcceptDeclineTask(projectId as string);
+
+	const { createTask, isPending: isCreatingTask } = useCreateNewTask(
+		projectId as string
+	);
 
 	const router = useRouter();
 
@@ -137,60 +145,72 @@ const ProjectDetails = () => {
 				setDocuments([]);
 			},
 			onError: (error) => {
-				toast.error(`Error submitting task: ${error}`);
+				toast.error(`Error submitting task: ${error.message}`);
 			},
 		});
 	};
 
-	const handleAcceptDecline = (
-		action: "accepted" | "declined",
-		taskId: string,
-		price?: number,
-		dueDate?: Date | null
-	) => {
-		if (!taskId) {
-			return;
-		}
-		const payload: any = {
-			status: action,
-			taskId,
-		};
-		if (action === "accepted") {
-			payload.cost = price;
-			payload.dueDate = dueDate
-				? new Date(dueDate).toISOString()
-				: undefined;
-		}
-
-		if (action === "declined") {
-			payload.declineReason = reason;
-		}
-		acceptOrDeclineTask(payload, {
+	const onCreateNewTask = (data: FormValues) => {
+		createTask(data, {
 			onSuccess: () => {
-				toast.success(`Project ${action} successfully`);
-				if (action === "declined") {
-					handleConfirmDecline();
-					router.push("/opportunities");
-					return;
-				}
-				setShowAcceptModal(false);
-				router.push(`/projects/${projectId}`);
+				setOpenAddNewTaskForm(false);
+				toast.success("Task created for this project");
 			},
-			onError: () => {
-				toast.error(
-					`Error ${
-						action === "accepted" ? "accepting" : "declining"
-					} project`
-				);
+			onError: (error) => {
+				toast.error(`Error Creating task: ${error.message}`);
 			},
 		});
 	};
 
-	const handleConfirm = (action: "accepted" | "declined", taskId: string) =>
-		handleSubmit((data) => {
-			// now you have form data + other arguments
-			handleAcceptDecline(action, taskId, data.price, data.dueDate);
-		});
+	// const handleAcceptDecline = (
+	// 	action: "accepted" | "declined",
+	// 	taskId: string,
+	// 	price?: number,
+	// 	dueDate?: Date | null
+	// ) => {
+	// 	if (!taskId) {
+	// 		return;
+	// 	}
+	// 	const payload: any = {
+	// 		status: action,
+	// 		taskId,
+	// 	};
+	// 	if (action === "accepted") {
+	// 		payload.cost = price;
+	// 		payload.dueDate = dueDate
+	// 			? new Date(dueDate).toISOString()
+	// 			: undefined;
+	// 	}
+
+	// 	if (action === "declined") {
+	// 		payload.declineReason = reason;
+	// 	}
+	// 	acceptOrDeclineTask(payload, {
+	// 		onSuccess: () => {
+	// 			toast.success(`Project ${action} successfully`);
+	// 			if (action === "declined") {
+	// 				handleConfirmDecline();
+	// 				router.push("/opportunities");
+	// 				return;
+	// 			}
+	// 			setShowAcceptModal(false);
+	// 			router.push(`/projects/${projectId}`);
+	// 		},
+	// 		onError: () => {
+	// 			toast.error(
+	// 				`Error ${
+	// 					action === "accepted" ? "accepting" : "declining"
+	// 				} project`
+	// 			);
+	// 		},
+	// 	});
+	// };
+
+	// const handleConfirm = (action: "accepted" | "declined", taskId: string) =>
+	// 	handleSubmit((data) => {
+	// 		// now you have form data + other arguments
+	// 		handleAcceptDecline(action, taskId, data.price, data.dueDate);
+	// 	});
 
 	const handleDeclineClick = () => {
 		setShowDeclineModal(true);
@@ -565,22 +585,21 @@ const ProjectDetails = () => {
 										{task.description}
 									</span>
 
-									{task.status === "in-progress" &&
-										project?.data?.paymentStatus !==
-											"pending" && (
-											<Button
-												onClick={() => {
-													setTaskId(task.id);
-													setOpenTaskDeliverablesForm(
-														true
-													);
-												}}
-												variant="outline"
-												className="w-fit text-xs rounded-lg"
-											>
-												Add Task Deliverables
-											</Button>
-										)}
+									{project?.data?.paymentStatus !==
+										"pending" && (
+										<Button
+											onClick={() => {
+												setTaskId(task.id);
+												setOpenTaskDeliverablesForm(
+													true
+												);
+											}}
+											variant="outline"
+											className="w-fit text-xs rounded-lg"
+										>
+											Add Task Deliverables
+										</Button>
+									)}
 
 									{task?.status === "assigned" && (
 										<div className="flex gap-4">
@@ -619,9 +638,114 @@ const ProjectDetails = () => {
 								</div>
 							))
 						)}
+
+						<Button
+							onClick={() => {
+								setOpenAddNewTaskForm(true);
+							}}
+							variant="outline"
+							className="w-fit text-xs rounded-lg"
+						>
+							Add New Task
+						</Button>
 					</div>
 				)}
 			</div>
+
+			{/* New Task modal */}
+			<Dialog
+				open={openAddNewTaskForm}
+				onOpenChange={setOpenTaskDeliverablesForm}
+			>
+				<DialogContent className="!rounded-3xl">
+					<DialogTitle>Create new task</DialogTitle>
+
+					<form
+						onSubmit={handleSubmit(onCreateNewTask)}
+						className="flex flex-col gap-6 mt-5"
+					>
+						<div className="flex flex-col gap-2">
+							<Label>
+								Task Title{" "}
+								<span className="text-red-600">*</span>
+							</Label>
+							<Input
+								className="rounded-[14px] py-6 px-4 border border-[#D1DAEC]"
+								{...register("title", {
+									required: "Title is required",
+								})}
+								placeholder="Task title"
+							/>
+							{formState.errors.title && (
+								<span className="text-red-500 text-sm">
+									{formState.errors.title.message}
+								</span>
+							)}
+						</div>
+
+						<div className="flex flex-col gap-2">
+							<Label>
+								Description{" "}
+								<span className="text-red-600">*</span>
+							</Label>
+							<Textarea
+								className="rounded-[14px] border border-[#D1DAEC]"
+								{...register("description", {
+									required: "Description is required",
+								})}
+								placeholder="Task description"
+							/>
+							{formState.errors.description && (
+								<span className="text-red-500 text-sm">
+									{formState.errors.description.message}
+								</span>
+							)}
+						</div>
+						<div className="flex flex-col gap-2">
+							<Label>
+								Price <span className="text-red-600">*</span>
+							</Label>
+							<Input
+								type="number"
+								placeholder="Enter price"
+								className="rounded-[14px] py-6 px-4 border border-[#D1DAEC]"
+								{...register("cost", {
+									required: "Price is required",
+									min: {
+										value: 1,
+										message: "Price must be greater than 0",
+									},
+								})}
+							/>
+							{formState.errors.cost && (
+								<span className="text-red-500 text-sm">
+									{formState.errors.cost.message}
+								</span>
+							)}
+						</div>
+
+						{/* Buttons */}
+						<div className="flex gap-2 justify-end mt-2">
+							<Button
+								variant="outline"
+								type="button"
+								onClick={() => setOpenAddNewTaskForm(false)}
+							>
+								Cancel
+							</Button>
+							<Button
+								variant="default"
+								type="submit"
+								disabled={isCreatingTask}
+							>
+								{isCreatingTask
+									? "Submitting..."
+									: "Submit Task"}
+							</Button>
+						</div>
+					</form>
+				</DialogContent>
+			</Dialog>
 
 			{/* Task Deliverables Modal */}
 			<Dialog
@@ -799,7 +923,7 @@ const ProjectDetails = () => {
 				</DialogContent>
 			</Dialog>
 
-			<Dialog open={showDeclineModal} onOpenChange={setShowDeclineModal}>
+			{/* <Dialog open={showDeclineModal} onOpenChange={setShowDeclineModal}>
 				<DialogContent className="!rounded-3xl">
 					<DialogTitle>Decline Opportunity</DialogTitle>
 					<div className="flex flex-col gap-4 mt-2">
@@ -851,9 +975,9 @@ const ProjectDetails = () => {
 						</div>
 					</div>
 				</DialogContent>
-			</Dialog>
+			</Dialog> */}
 
-			<Modal
+			{/* <Modal
 				open={showAcceptModal}
 				onClose={() => setShowAcceptModal(false)}
 				title="Submit Offer"
@@ -862,7 +986,6 @@ const ProjectDetails = () => {
 					onSubmit={handleConfirm("accepted", selectedTask)}
 					className="flex flex-col gap-4 mt-2"
 				>
-					{/* Price */}
 					<div className="flex flex-col gap-2">
 						<Label>
 							Price <span className="text-red-600">*</span>
@@ -886,7 +1009,6 @@ const ProjectDetails = () => {
 						)}
 					</div>
 
-					{/* Due Date */}
 					<div className="form-group flex flex-col gap-2">
 						<Label>
 							Due Date <span className="text-red-600">*</span>
@@ -994,7 +1116,6 @@ const ProjectDetails = () => {
 						/>
 					</div>
 
-					{/* Buttons */}
 					<div className="flex gap-2 justify-end mt-2">
 						<Button
 							variant="outline"
@@ -1014,7 +1135,7 @@ const ProjectDetails = () => {
 						</Button>
 					</div>
 				</form>
-			</Modal>
+			</Modal> */}
 		</div>
 	);
 };

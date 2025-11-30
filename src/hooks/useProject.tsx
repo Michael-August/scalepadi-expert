@@ -242,6 +242,50 @@ export const useGetTask = (taskId: string) => {
 	return { task: data, isLoading };
 };
 
+export const useCreateNewTask = (projectId: string) => {
+	const queryClient = useQueryClient();
+	const { mutate: createTask, isPending } = useMutation({
+		mutationFn: async (data: {
+			title: string;
+			cost: number;
+			description: string;
+		}) => {
+			try {
+				const response = await axiosClient.post(`/task/expert`, {
+					...data,
+					projectId,
+				});
+				if (response.data?.status === false) {
+					throw new Error(
+						response.data?.message || `Failed to create task`
+					);
+				}
+				return response.data;
+			} catch (error: any) {
+				if (error instanceof AxiosError) {
+					toast.error(
+						error.response?.data?.message || `Failed to create task`
+					);
+				} else if (error instanceof Error) {
+					toast.error(error.message);
+				} else {
+					toast.error(
+						`An unexpected error occured while trying to create task`
+					);
+				}
+
+				throw error;
+			}
+		},
+		onSuccess: (data) => {
+			toast.success(data.message);
+			queryClient.invalidateQueries({ queryKey: ["tasks", projectId] });
+		},
+	});
+
+	return { createTask, isPending };
+};
+
 export const useGetBusinessHire = () => {
 	const { data, isLoading } = useQuery({
 		queryKey: ["Hires"],
