@@ -123,6 +123,7 @@ const DashboardNav = ({
 			)}
 			{withLogo && (
 				<Image
+					onClick={() => router.push("/projects")}
 					src={"/logo.svg"}
 					alt="Logo"
 					width={104}
