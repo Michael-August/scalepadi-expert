@@ -14,319 +14,341 @@ import { useRouter, useSearchParams } from "next/navigation";
 const steps = ["About You", "Professional Experience", "Profiling"];
 
 const ProfileSetUp = () => {
-  const [currentStep, setCurrentStep] = useState(0);
-  const methods = useForm({
-    mode: "onBlur",
-    defaultValues: {
-      name: "",
-      email: "",
-      gender: "",
-      phone: "",
-      country: "",
-      state: "",
-      category: "",
-      role: [],
-      preferredIndustry: [],
-      skills: [],
-      yearsOfExperience: "",
-      portfolio: "",
-      linkedin: "",
-      resume: null, // Added resume field
-      bio: "",
-      identityType: "",
-      identification: null,
-      availability: "",
-    },
-  });
+	const [currentStep, setCurrentStep] = useState(0);
+	const methods = useForm({
+		mode: "onBlur",
+		defaultValues: {
+			name: "",
+			email: "",
+			gender: "",
+			phone: "",
+			country: "",
+			state: "",
+			category: "",
+			role: [],
+			preferredIndustry: [],
+			skills: [],
+			yearsOfExperience: "",
+			portfolio: "",
+			linkedin: "",
+			resume: null, // Added resume field
+			bio: "",
+			identityType: "",
+			identification: null,
+			availability: "",
+		},
+	});
 
-  const [user, setUser] = useState<any>();
-  const router = useRouter();
+	const [user, setUser] = useState<any>();
+	const router = useRouter();
 
-  const searchParams = useSearchParams();
-  const stepParam = searchParams.get("step");
+	const searchParams = useSearchParams();
+	const stepParam = searchParams.get("step");
 
-  useEffect(() => {
-    if (stepParam) {
-      const stepIndex = steps.findIndex(
-        (step) =>
-          step.toLowerCase().replace(/\s+/g, "-") === stepParam.toLowerCase()
-      );
-      if (stepIndex !== -1) {
-        setCurrentStep(stepIndex);
-      }
-    }
-  }, [stepParam]);
+	useEffect(() => {
+		if (stepParam) {
+			const stepIndex = steps.findIndex(
+				(step) =>
+					step.toLowerCase().replace(/\s+/g, "-") ===
+					stepParam.toLowerCase()
+			);
+			if (stepIndex !== -1) {
+				setCurrentStep(stepIndex);
+			}
+		}
+	}, [stepParam]);
 
-  const { completeProfileSetup, isPending } = useCompleteProfileSetUp();
+	const { completeProfileSetup, isPending } = useCompleteProfileSetUp();
 
-  const onNext = () => setCurrentStep((prev) => prev + 1);
-  const onBack = () => setCurrentStep((prev) => prev - 1);
+	const onNext = () => setCurrentStep((prev) => prev + 1);
+	const onBack = () => setCurrentStep((prev) => prev - 1);
 
-  // In your ProfileSetUp component, update the onSubmitFinal function:
-const onSubmitFinal = (data: any) => {
-  let stepRate = 0;
-  if (currentStep === 0) stepRate = 30;
-  if (currentStep === 1) stepRate = 70;
-  if (currentStep === 2) stepRate = 100;
+	// In your ProfileSetUp component, update the onSubmitFinal function:
+	const onSubmitFinal = (data: any) => {
+		let stepRate = 0;
+		if (currentStep === 0) stepRate = 30;
+		if (currentStep === 1) stepRate = 70;
+		if (currentStep === 2) stepRate = 100;
 
-  let completionRate =
-    user?.regPercentage && user.regPercentage >= stepRate
-      ? user.regPercentage
-      : stepRate;
+		let completionRate =
+			user?.regPercentage && user.regPercentage >= stepRate
+				? user.regPercentage
+				: stepRate;
 
-  if (currentStep === 0) {
-    completeProfileSetup(
-      { ...data, regPercentage: completionRate },
-      {
-        onSuccess: () => {
-          if (stepParam) {
-            router.push("/profile");
-          } else {
-            onNext();
-          }
-        },
-      }
-    );
-  }
+		if (currentStep === 0) {
+			completeProfileSetup(
+				{ ...data, regPercentage: completionRate },
+				{
+					onSuccess: () => {
+						if (stepParam) {
+							router.push("/profile");
+						} else {
+							onNext();
+						}
+					},
+				}
+			);
+		}
 
-  if (currentStep === 1) {
-    const payload = {
-      ...data,
-      socialLinks: {
-        linkedin: data.linkedin,
-        website: data.portfolio,
-      },
-    };
-    completeProfileSetup(
-      { ...payload, regPercentage: completionRate },
-      {
-        onSuccess: () => {
-           if (stepParam) {
-            router.push("/profile");
-          } else {
-            onNext();
-          }
-        },
-      }
-    );
-  }
+		if (currentStep === 1) {
+			const payload = {
+				...data,
+				socialLinks: {
+					linkedin: data.linkedin,
+					website: data.portfolio,
+				},
+			};
+			completeProfileSetup(
+				{ ...payload, regPercentage: completionRate },
+				{
+					onSuccess: () => {
+						if (stepParam) {
+							router.push("/profile");
+						} else {
+							onNext();
+						}
+					},
+				}
+			);
+		}
 
-  if (currentStep === 2) {
-    const formData = new FormData();
-    
-    // Append all fields to FormData
-    Object.keys(data).forEach((key) => {
-      if (key === "identification" || key === "resume") {
-        // Handle file uploads
-        if (data[key]) {
-          const fileFieldName = key === "identification" ? "idImage" : "resume";
-          formData.append(fileFieldName, data[key]);
-        }
-      } else if (key === "role" || key === "preferredIndustry" || key === "skills") {
-        // Handle arrays
-        if (Array.isArray(data[key])) {
-          data[key].forEach((item: string, index: number) => {
-            formData.append(`${key}[${index}]`, item);
-          });
-        }
-      } else if (key === "socialLinks") {
-        // Skip socialLinks as we're handling linkedin and portfolio separately
-        return;
-      } else {
-        // Handle regular fields
-        if (data[key] !== null && data[key] !== undefined) {
-          formData.append(key, data[key]);
-        }
-      }
-    });
+		if (currentStep === 2) {
+			const formData = new FormData();
 
-    // Add social links if they exist
-    if (data.linkedin) {
-      formData.append("socialLinks[linkedin]", data.linkedin);
-    }
-    if (data.portfolio) {
-      formData.append("socialLinks[website]", data.portfolio);
-    }
+			// Append all fields to FormData
+			Object.keys(data).forEach((key) => {
+				if (key === "identification" || key === "resume") {
+					// Handle file uploads
+					if (data[key]) {
+						const fileFieldName =
+							key === "identification" ? "idImage" : "resume";
+						formData.append(fileFieldName, data[key]);
+					}
+				} else if (
+					key === "role" ||
+					key === "preferredIndustry" ||
+					key === "skills"
+				) {
+					// Handle arrays
+					if (Array.isArray(data[key])) {
+						data[key].forEach((item: string, index: number) => {
+							formData.append(`${key}[${index}]`, item);
+						});
+					}
+				} else if (key === "socialLinks") {
+					// Skip socialLinks as we're handling linkedin and portfolio separately
+					return;
+				} else {
+					// Handle regular fields
+					if (data[key] !== null && data[key] !== undefined) {
+						formData.append(key, data[key]);
+					}
+				}
+			});
 
-    formData.append("regPercentage", String(completionRate));
+			// Add social links if they exist
+			if (data.linkedin) {
+				formData.append("socialLinks[linkedin]", data.linkedin);
+			}
+			if (data.portfolio) {
+				formData.append("socialLinks[website]", data.portfolio);
+			}
 
-    completeProfileSetup(formData, {
-      onSuccess: () => {
-        if (stepParam) {
-          router.push("/profile");
-        } else {
-          router.push("/projects");
-        }
-      },
-    });
-  }
-};
+			formData.append("regPercentage", String(completionRate));
 
-  // const onSubmitFinal = (data: any) => {
-  //   let stepRate = 0;
-  //   if (currentStep === 0) stepRate = 30;
-  //   if (currentStep === 1) stepRate = 70;
-  //   if (currentStep === 2) stepRate = 100; // Updated percentages
+			completeProfileSetup(formData, {
+				onSuccess: () => {
+					if (stepParam) {
+						router.push("/profile");
+					} else {
+						router.push("/projects");
+					}
+				},
+			});
+		}
+	};
 
-  //   let completionRate =
-  //     user?.regPercentage && user.regPercentage >= stepRate
-  //       ? user.regPercentage
-  //       : stepRate;
+	// const onSubmitFinal = (data: any) => {
+	//   let stepRate = 0;
+	//   if (currentStep === 0) stepRate = 30;
+	//   if (currentStep === 1) stepRate = 70;
+	//   if (currentStep === 2) stepRate = 100; // Updated percentages
 
-  //   if (currentStep === 0) {
-  //     completeProfileSetup(
-  //       { ...data, regPercentage: completionRate },
-  //       {
-  //         onSuccess: () => {
-  //           if (stepParam) {
-  //             router.push("/profile");
-  //           } else {
-  //             onNext();
-  //           }
-  //         },
-  //       }
-  //     );
-  //   }
+	//   let completionRate =
+	//     user?.regPercentage && user.regPercentage >= stepRate
+	//       ? user.regPercentage
+	//       : stepRate;
 
-  //   if (currentStep === 1) {
-  //     const payload = {
-  //       ...data,
-  //       socialLinks: {
-  //         linkedin: data.linkedin,
-  //         website: data.portfolio,
-  //       },
-  //     };
-  //     completeProfileSetup(
-  //       { ...payload, regPercentage: completionRate },
-  //       {
-  //         onSuccess: () => {
-  //            if (stepParam) {
-  //             router.push("/profile");
-  //           } else {
-  //             onNext();
-  //           }
-  //         },
-  //       }
-  //     );
-  //   }
+	//   if (currentStep === 0) {
+	//     completeProfileSetup(
+	//       { ...data, regPercentage: completionRate },
+	//       {
+	//         onSuccess: () => {
+	//           if (stepParam) {
+	//             router.push("/profile");
+	//           } else {
+	//             onNext();
+	//           }
+	//         },
+	//       }
+	//     );
+	//   }
 
-  //   if (currentStep === 2) {
-  //     const formData = new FormData();
-  //     Object.keys(data).forEach((key) => {
-  //       if (key === "identification" || key === "resume") {
-  //         if (data[key]) {
-  //           formData.append(key === "identification" ? "idImage" : "resume", data[key]);
-  //         }
-  //       } else {
-  //         formData.append(key, data[key]);
-  //       }
-  //     });
-  //     formData.append("regPercentage", String(completionRate));
+	//   if (currentStep === 1) {
+	//     const payload = {
+	//       ...data,
+	//       socialLinks: {
+	//         linkedin: data.linkedin,
+	//         website: data.portfolio,
+	//       },
+	//     };
+	//     completeProfileSetup(
+	//       { ...payload, regPercentage: completionRate },
+	//       {
+	//         onSuccess: () => {
+	//            if (stepParam) {
+	//             router.push("/profile");
+	//           } else {
+	//             onNext();
+	//           }
+	//         },
+	//       }
+	//     );
+	//   }
 
-  //     completeProfileSetup(formData, {
-  //       onSuccess: () => {
-  //         if (stepParam) {
-  //           router.push("/profile");
-  //         } else {
-  //           router.push("/projects");
-  //         }
-  //       },
-  //     });
-  //   }
-  // };
+	//   if (currentStep === 2) {
+	//     const formData = new FormData();
+	//     Object.keys(data).forEach((key) => {
+	//       if (key === "identification" || key === "resume") {
+	//         if (data[key]) {
+	//           formData.append(key === "identification" ? "idImage" : "resume", data[key]);
+	//         }
+	//       } else {
+	//         formData.append(key, data[key]);
+	//       }
+	//     });
+	//     formData.append("regPercentage", String(completionRate));
 
-  useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-    setUser(storedUser);
+	//     completeProfileSetup(formData, {
+	//       onSuccess: () => {
+	//         if (stepParam) {
+	//           router.push("/profile");
+	//         } else {
+	//           router.push("/projects");
+	//         }
+	//       },
+	//     });
+	//   }
+	// };
 
-    methods.reset({
-      name: storedUser?.name || "",
-      email: storedUser?.email || "",
-      gender: storedUser?.gender || "",
-      phone: storedUser?.phone || "",
-      country: storedUser?.country || "",
-      state: storedUser?.state || "",
-      category: storedUser?.category || "",
-      role: Array.isArray(storedUser?.role)
-        ? storedUser.role.filter((r: string) => r !== "undefined")
-        : [],
-      preferredIndustry: Array.isArray(storedUser?.preferredIndustry)
-        ? storedUser.preferredIndustry.filter(
-            (ind: string) => ind !== "undefined"
-          )
-        : [],
-      skills: Array.isArray(storedUser?.skills)
-        ? storedUser.skills.filter((skill: string) => skill !== "undefined")
-        : [],
-      yearsOfExperience: storedUser?.yearsOfExperience || "",
-      portfolio: storedUser?.socialLinks?.website || "",
-      linkedin: storedUser?.socialLinks?.linkedin || "",
-      resume: null, // Reset resume file
-      bio: storedUser?.bio || "",
-      identityType: storedUser?.identification?.type || "",
-      identification: null,
-      availability: storedUser?.availability,
-    });
-  }, [methods]);
+	useEffect(() => {
+		const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+		if (!storedUser || Object.keys(storedUser).length === 0) return;
+		setUser(storedUser);
 
-  return (
-    <div className="flex flex-col gap-10 pb-20">
-      <div className="heading flex items-center gap-[9px] w-full px-14 py-4 bg-[#F8F8F8]">
-        {steps.map((step, idx) => (
-          <div key={idx} className="flex items-center gap-2 select-none">
-            <div
-              className={`w-6 h-6 rounded-sm flex items-center justify-center text-white text-sm ${
-                idx < currentStep
-                  ? "bg-green-500"
-                  : idx === currentStep
-                  ? "bg-primary"
-                  : "bg-[#878A93]"
-              }`}
-            >
-              {idx < currentStep ? <Check size={16} /> : ""}
-            </div>
-            <span
-              className={`${
-                idx === currentStep ? "font-semibold" : "text-[#878A93]"
-              }`}
-            >
-              {step}
-            </span>
-            {idx < steps.length - 1 && (
-              <span className="text-[#878A93]">→</span>
-            )}
-          </div>
-        ))}
-      </div>
-      <div className="w-full flex items-center">
-        <div className="w-full lg:w-[570px] flex flex-col gap-2 mx-auto p-2 lg:p-0">
-          <FormProvider {...methods}>
-            {currentStep === 0 && (
-              <AboutYou
-                user={user}
-                onNext={onSubmitFinal}
-                isAdding={isPending}
-              />
-            )}
-            {currentStep === 1 && (
-              <ProfessionalExperience
-                onNext={onSubmitFinal}
-                onBack={onBack}
-                isAdding={isPending}
-              />
-            )}
-            {currentStep === 2 && (
-              <Profiling
-                onBack={onBack}
-                onSubmit={onSubmitFinal}
-                isAdding={isPending}
-              />
-            )}
-          </FormProvider>
-        </div>
-      </div>
-    </div>
-  );
+		const shouldReload = localStorage.getItem("fromOTP");
+		if (shouldReload) {
+			localStorage.removeItem("fromOTP");
+			window.location.reload();
+		}
+	}, []);
+
+	useEffect(() => {
+		if (!user) return;
+
+		methods.reset({
+			name: user?.name || "",
+			email: user?.email || "",
+			gender: user?.gender || "",
+			phone: user?.phone || "",
+			country: user?.country || "",
+			state: user?.state || "",
+			category: user?.category || "",
+			role: Array.isArray(user?.role)
+				? user.role.filter((r: string) => r !== "undefined")
+				: [],
+			preferredIndustry: Array.isArray(user?.preferredIndustry)
+				? user.preferredIndustry.filter(
+						(ind: string) => ind !== "undefined"
+				  )
+				: [],
+			skills: Array.isArray(user?.skills)
+				? user.skills.filter((skill: string) => skill !== "undefined")
+				: [],
+			yearsOfExperience: user?.yearsOfExperience || "",
+			portfolio: user?.socialLinks?.website || "",
+			linkedin: user?.socialLinks?.linkedin || "",
+			resume: null, // Reset resume file
+			bio: user?.bio || "",
+			identityType: user?.identification?.type || "",
+			identification: null,
+			availability: user?.availability,
+		});
+	}, [methods, user]);
+
+	return (
+		<div className="flex flex-col gap-10 pb-20">
+			<div className="heading flex items-center gap-[9px] w-full px-14 py-4 bg-[#F8F8F8]">
+				{steps.map((step, idx) => (
+					<div
+						key={idx}
+						className="flex items-center gap-2 select-none"
+					>
+						<div
+							className={`w-6 h-6 rounded-sm flex items-center justify-center text-white text-sm ${
+								idx < currentStep
+									? "bg-green-500"
+									: idx === currentStep
+									? "bg-primary"
+									: "bg-[#878A93]"
+							}`}
+						>
+							{idx < currentStep ? <Check size={16} /> : ""}
+						</div>
+						<span
+							className={`${
+								idx === currentStep
+									? "font-semibold"
+									: "text-[#878A93]"
+							}`}
+						>
+							{step}
+						</span>
+						{idx < steps.length - 1 && (
+							<span className="text-[#878A93]">→</span>
+						)}
+					</div>
+				))}
+			</div>
+			<div className="w-full flex items-center">
+				<div className="w-full lg:w-[570px] flex flex-col gap-2 mx-auto p-2 lg:p-0">
+					<FormProvider {...methods}>
+						{currentStep === 0 && (
+							<AboutYou
+								user={user}
+								onNext={onSubmitFinal}
+								isAdding={isPending}
+							/>
+						)}
+						{currentStep === 1 && (
+							<ProfessionalExperience
+								onNext={onSubmitFinal}
+								onBack={onBack}
+								isAdding={isPending}
+							/>
+						)}
+						{currentStep === 2 && (
+							<Profiling
+								onBack={onBack}
+								onSubmit={onSubmitFinal}
+								isAdding={isPending}
+							/>
+						)}
+					</FormProvider>
+				</div>
+			</div>
+		</div>
+	);
 };
 
 export default ProfileSetUp;
