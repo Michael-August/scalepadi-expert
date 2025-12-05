@@ -120,10 +120,10 @@ const OTP = () => {
 			<div className="flex justify-center py-10 lg:py-28">
 				<div className="flex flex-col gap-6">
 					<div className="top flex flex-col gap-4 items-center justify-center">
-						<span className="text-primary-text font-bold lg:text-[32px] text-2xl">
+						<span className="text-primary-text font-bold lg:text-[32px] text-xl">
 							Code Your Email
 						</span>
-						<span className="text-secondary-text text-base font-normal text-center">
+						<span className="text-secondary-text text-sm lg:text-base font-normal text-center">
 							Enter the code sent to your email:{" "}
 							<span className="text-primary">{email}</span> to
 							continue.
@@ -143,7 +143,7 @@ const OTP = () => {
 										placeholder="*"
 										inputMode="text"
 										className={clsx(
-											"text-center w-16 h-12 rounded-xl text-xl font-medium border border-[#D1DAEC80]"
+											"text-center w-10 h-10 lg:w-16 lg:h-12 rounded-xl text-sm lg:text-xl font-medium border border-[#D1DAEC80]"
 										)}
 										value={digit}
 										onChange={(e) =>

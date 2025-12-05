@@ -154,6 +154,11 @@ const ProjectDetails = () => {
 		createTask(data, {
 			onSuccess: () => {
 				setOpenAddNewTaskForm(false);
+				methods.reset({
+					cost: 0,
+					description: "",
+					title: "",
+				});
 				toast.success("Task created for this project");
 			},
 			onError: (error) => {
