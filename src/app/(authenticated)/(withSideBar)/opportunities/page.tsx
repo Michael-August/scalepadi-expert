@@ -70,6 +70,8 @@ const Opportunities = () => {
 	const router = useRouter();
 	const [open, setOpen] = useState(false);
 
+	const [hireToActOn, setHireToActOn] = useState<any>();
+
 	const handleAcceptDecline = (
 		action: "accepted" | "declined",
 		projectId: string,
@@ -127,6 +129,8 @@ const Opportunities = () => {
 				onSuccess: () => {
 					toast.success(`Hire ${action} successfully`);
 					if (action === "declined") {
+						setShowDeclineModal(false);
+						setSelectedProjectId(null);
 						router.push("/opportunities");
 						return;
 					}
@@ -161,8 +165,6 @@ const Opportunities = () => {
 		if (selectedProjectId) {
 			handleAcceptDecline("declined", selectedProjectId);
 		}
-		setShowDeclineModal(false);
-		setSelectedProjectId(null);
 	};
 
 	const handleCancelDecline = () => {
@@ -413,7 +415,7 @@ const Opportunities = () => {
 									>
 										<div className="flex flex-col gap-2">
 											<span className="text-[#1A1A1A] text-sm">
-												Project brief
+												Job description
 											</span>
 											<span className="text-[#727374] text-sm">
 												{hire?.description || "N/A"}
@@ -421,7 +423,7 @@ const Opportunities = () => {
 										</div>
 										<div className="flex flex-col gap-2">
 											<span className="text-[#1A1A1A] text-sm">
-												Budget
+												Salary
 											</span>
 											<span className="text-[#727374] text-sm">
 												{hire?.budget.toLocaleString() ||
@@ -457,11 +459,12 @@ const Opportunities = () => {
 												<Button
 													disabled={isPendingHire}
 													variant={"destructive"}
-													onClick={() =>
+													onClick={() => {
+														setHireToActOn(hire);
 														setShowDeclineModal(
 															true
-														)
-													}
+														);
+													}}
 													className="w-fit text-xs rounded-[14px]"
 												>
 													{isPendingHire
@@ -528,10 +531,15 @@ const Opportunities = () => {
 							</Button>
 							<Button
 								variant="destructive"
-								onClick={handleConfirmDecline}
-								disabled={isPending}
+								onClick={() => {
+									handleAcceptDeclineHire(
+										"declined",
+										hireToActOn?.id
+									);
+								}}
+								disabled={isPendingHire}
 							>
-								{isPending ? "Declining..." : "Confirm Decline"}
+								{isPendingHire ? "Declining..." : "Decline"}
 							</Button>
 						</div>
 					</div>

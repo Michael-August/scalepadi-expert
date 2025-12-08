@@ -429,7 +429,7 @@ const ProjectDetails = () => {
 											"No challenge description provided."}
 									</span>
 								</div>
-								<div className="flex flex-col gap-2">
+								{/* <div className="flex flex-col gap-2">
 									<span className="text-[#1A1A1A] text-sm font-normal">
 										Kind of Expert needed
 									</span>
@@ -437,7 +437,7 @@ const ProjectDetails = () => {
 										{project?.data?.kindOfExperts ||
 											"No Prefered kind of expert provided."}
 									</span>
-								</div>
+								</div> */}
 								<div className="flex flex-col gap-2">
 									<span className="text-[#1A1A1A] text-sm font-normal">
 										Location
