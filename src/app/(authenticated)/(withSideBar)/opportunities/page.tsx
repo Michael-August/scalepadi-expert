@@ -458,9 +458,8 @@ const Opportunities = () => {
 													disabled={isPendingHire}
 													variant={"destructive"}
 													onClick={() =>
-														handleAcceptDeclineHire(
-															"declined",
-															hire.id
+														setShowDeclineModal(
+															true
 														)
 													}
 													className="w-fit text-xs rounded-[14px]"
