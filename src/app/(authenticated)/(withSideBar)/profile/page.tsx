@@ -442,6 +442,43 @@ const Profile = () => {
 												</span>
 											</div>
 										</div>
+										<div className="flex flex-col gap-4 mt-5">
+											<span className="font-medium text-sm flex items-center justify-between text-[#878A93]">
+												Skills
+												<span
+													onClick={() =>
+														router.push(
+															`/profile-setup?step=professional-experience`
+														)
+													}
+													className="border border-[#E7E8E9] hover:bg-yellow-400 hover:text-white rounded-[10px] p-2 bg-white cursor-pointer text-[#0E1426] text-sm"
+												>
+													Edit
+												</span>
+											</span>
+											<div className="flex items-center gap-2 flex-wrap">
+												{user?.skills?.map(
+													(
+														skill: string,
+														index: number
+													) => (
+														<span
+															key={index}
+															className="bg-[#F2F7FF] p-2 rounded-[14px] text-xs text-[#1E88E5] capitalize"
+														>
+															{skill}
+														</span>
+													)
+												)}
+												{(!user?.skills ||
+													user.skills.length ===
+														0) && (
+													<span className="text-[#878A93] text-sm">
+														No skills listed
+													</span>
+												)}
+											</div>
+										</div>
 									</div>
 								</div>
 							)}
