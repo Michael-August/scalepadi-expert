@@ -205,8 +205,8 @@ export default function MessagesPage() {
 								No Conversations
 							</h3>
 							<p className="text-sm text-gray-500 mt-1">
-								Start a new conversation to connect with others.
-								Click the button below
+								Conversation will appear here when you have a
+								message from others.
 							</p>
 						</div>
 					)}
@@ -336,7 +336,7 @@ export default function MessagesPage() {
 						height={250}
 					/>
 					<span className="text-2xl font-semibold text-primary text-center">
-						Scalepadi chats
+						ScalePadi chats
 					</span>
 					<span className="text-sm text-gray-500 text-center">
 						Select a chat to see messages

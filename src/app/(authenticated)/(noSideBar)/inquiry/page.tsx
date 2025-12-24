@@ -61,9 +61,8 @@ const Inquiry = () => {
 							Have Inquiries about our Product ?
 						</span>
 						<span className="text-base text-[#1A1A1A] font-light">
-							You're just one step away from kicking off your
-							growth journey. All payments are encrypted and
-							protected.
+							Need help? Reach out to our dedicated customer
+							service experts
 						</span>
 					</div>
 
